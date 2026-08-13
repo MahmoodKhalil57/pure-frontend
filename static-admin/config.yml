@@ -291,3 +291,94 @@ collections:
                 fields:
                   - { label: Label, name: label, widget: string }
                   - { label: URL, name: url, widget: string }
+
+  # ---------------------------------------------------------------------------
+  # The project file itself, edited visually.
+  #
+  # `admin-cms.json` declares the forms this site expects its node to serve. It
+  # was hand-edited JSON, which is a poor fit for the person who actually needs
+  # to change it — so it is modelled here as a singleton: one file, one entry,
+  # no "add new" button.
+  #
+  # Declaring it here rather than building a bespoke screen means both editors
+  # get it. Sveltia renders it because this is its config; the adminCms panel
+  # renders it because that panel mirrors this same config.
+  # ---------------------------------------------------------------------------
+  - name: "project"
+    label: "Forms & project"
+    files:
+      - name: "admin-cms"
+        label: "Forms & project"
+        file: "admin-cms.json"
+        fields:
+          # Carried through untouched so saving does not strip it.
+          - { name: "$schema", label: "Schema", widget: "hidden", required: false }
+          - { name: "version", label: "Config version", widget: "hidden", required: false }
+
+          - name: "project"
+            label: "Project"
+            widget: "object"
+            fields:
+              - { name: "name", label: "Name", widget: "string" }
+              - { name: "slug", label: "Slug", widget: "string", hint: "Lowercase, dashes only." }
+
+          - name: "forms"
+            label: "Forms"
+            widget: "list"
+            hint: "Each form here is one form your node will serve."
+            fields:
+              - { name: "slug", label: "Slug", widget: "string", hint: "Used in the form's URL. Changing it breaks existing links." }
+              - { name: "name", label: "Name", widget: "string" }
+
+              - name: "fields"
+                label: "Fields"
+                widget: "list"
+                fields:
+                  - { name: "name", label: "Key", widget: "string", hint: "How the value is stored in a submission." }
+                  - { name: "label", label: "Label", widget: "string" }
+                  - name: "type"
+                    label: "Type"
+                    widget: "select"
+                    options: ["text", "email", "tel", "url", "textarea", "number", "select", "checkbox", "date"]
+                  - { name: "required", label: "Required", widget: "boolean", required: false }
+                  - { name: "placeholder", label: "Placeholder", widget: "string", required: false }
+                  - name: "width"
+                    label: "Width"
+                    widget: "select"
+                    required: false
+                    options: ["full", "half"]
+                  - name: "options"
+                    label: "Choices"
+                    widget: "list"
+                    required: false
+                    hint: "Only for a Select field."
+                    fields:
+                      - { name: "value", label: "Value", widget: "string" }
+                      - { name: "label", label: "Label", widget: "string" }
+                  - name: "showWhen"
+                    label: "Show only when"
+                    widget: "object"
+                    required: false
+                    hint: "Leave blank to always show this field."
+                    fields:
+                      - { name: "field", label: "Depends on field", widget: "string", required: false }
+                      - name: "is"
+                        label: "Condition"
+                        widget: "select"
+                        required: false
+                        options: ["equal", "not_equal", "filled", "empty"]
+                      - { name: "value", label: "Value", widget: "string", required: false }
+
+              - name: "settings"
+                label: "Settings"
+                widget: "object"
+                required: false
+                fields:
+                  - { name: "confirmationMessage", label: "Confirmation message", widget: "string", required: false }
+                  - { name: "submitLabel", label: "Submit button label", widget: "string", required: false }
+                  - name: "spamProtection"
+                    label: "Spam protection"
+                    widget: "select"
+                    required: false
+                    options: ["honeypot", "turnstile", "none"]
+                  - { name: "retentionDays", label: "Delete submissions after (days)", widget: "number", required: false, hint: "0 keeps them forever." }
