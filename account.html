@@ -3,10 +3,9 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <!-- /account and /account.html both answer; this is the one that counts. -->
     <link rel="canonical" href="account" />
-    <title>Your account — Qalam &amp; Ahar</title>
-    <meta name="description" content="Create an account or sign in." />
+    <title>Your account — Qalam & Ahar</title>
+    <meta name="description" content="Your account with the workshop." />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
@@ -14,38 +13,54 @@
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=Instrument+Sans:wght@400..700&amp;display=swap"
     />
-    <!-- ?v= is a cache buster. GitHub Pages serves these with max-age=14400,
-         so without it a stylesheet change takes up to four hours to reach
-         anyone who has already visited. Bump it when the assets change. -->
-    <link rel="stylesheet" href="assets/css/styles.css?v=8" />
+    <!-- ?v= is a cache buster: GitHub Pages serves these with max-age=14400. -->
+    <link rel="stylesheet" href="assets/css/styles.css?v=9" />
     <!-- Styles authored in the visual builder land here; styles.css stays hand-written. -->
-    <link rel="stylesheet" href="assets/css/page.css?v=8" />
+    <link rel="stylesheet" href="assets/css/page.css?v=9" />
 
     <!--
-      Runs before the body exists, which is the whole point: the page cannot
-      ask the server who you are without a round trip, and painting the
-      signed-out state first and correcting it afterwards is the flash.
-
-      So the browser keeps a hint from last time and this reads it
-      synchronously, before first paint. The hint is a display preference, not
-      a credential — it says which half of the page to draw, and every request
-      is still authorised by the session cookie on the server. Forging it gets
-      you a page that says your name and an API that refuses you.
-
-      With JavaScript off nothing runs, the default stands, and there is no
-      shift at all — the signed-out state is what a visitor without scripts can
-      use anyway.
+      Who this page is for, taken from its entry in the Pages collection and
+      stamped here on export. It has to be in the markup rather than fetched,
+      because the decision below happens before the page is painted.
     -->
+    <meta name="page-access" content="signed-in" />
+    <meta name="page-redirect" content="login" />
+
     <script>
-      window.__account = null;
-      try {
-        window.__account = localStorage.getItem("qa.account");
-        if (window.__account) {
-          document.documentElement.dataset.account = "in";
+      /*
+        Two jobs, both before the body exists.
+
+        It reads the hint the browser kept from last time and puts it on <html>,
+        so CSS can draw the right header and the right half of a page without
+        waiting for the server. And if this page is not for whoever that is, it
+        leaves for the page that is — replacing the entry rather than adding to
+        it, so Back does not bounce between the two.
+
+        The hint is a display preference, not a credential: it decides what is
+        drawn, never what is allowed. Every request is still authorised by the
+        session cookie, and main.js asks the server and corrects all of this
+        once the answer arrives.
+      */
+      (function () {
+        var signedIn = false;
+        try {
+          signedIn = Boolean(localStorage.getItem("qa.account"));
+        } catch (error) {
+          /* private mode, or storage refused — treated as signed out */
         }
-      } catch (error) {
-        /* private mode, or storage refused — the default stands */
-      }
+        if (signedIn) document.documentElement.dataset.account = "in";
+
+        var meta = function (name) {
+          var node = document.querySelector('meta[name="' + name + '"]');
+          return node ? node.getAttribute("content") : "";
+        };
+        var needs = meta("page-access");
+        var wrong =
+          (needs === "signed-in" && !signedIn) ||
+          (needs === "signed-out" && signedIn);
+        var to = meta("page-redirect");
+        if (wrong && to) location.replace(to);
+      })();
     </script>
   </head>
 
@@ -55,8 +70,9 @@
       <p data-text="site.announcement"></p>
     </aside>
 
-    <!-- The same drawing as the homepage's, placed here. Editing the symbol in
-         the builder changes both. -->
+    <!-- The masthead is a symbol: one drawing, placed on every page. Which
+         call to action it shows is decided by CSS from the attribute the head
+         script set, so it is right in the first frame. -->
     <header data-symbol="site-header" class="masthead">
       <a href="./" class="brand">
         <span lang="ar" dir="rtl" class="brand__ar">قلم و آهار</span>
@@ -65,148 +81,38 @@
       <nav aria-label="Sections" data-list="pages.pages" class="masthead__nav">
         <a href="./">Home</a>
       </nav>
-      <a href="./#notify" class="btn btn--ghost masthead__cta">
-        Get the opening notice
+      <a href="signup" class="btn btn--solid masthead__cta" data-account-when="out">
+        Sign up
+      </a>
+      <a href="account" class="btn btn--ghost masthead__cta" data-account-when="in">
+        Your account
       </a>
     </header>
 
     <main id="main">
-      <!--
-        A symbol, the same way the sign-up form is one. The entry in
-        content/symbols says what it carries (binding: account) and main.js
-        reads that; this markup is the drawing, which the builder owns.
-      -->
-      <section data-symbol="account-forms" class="account">
+      <section data-symbol="account-panel" class="account account--single">
         <header class="section-head">
           <p class="eyebrow">Your account</p>
-          <!--
-            Both headings are in the markup and CSS picks one, so the page is
-            not corrected after it is drawn. The attribute on <html> is already
-            set by the time any of this is painted.
-          -->
-          <h1 class="section-head__title" data-account-when="out">Sign in</h1>
-          <h1 class="section-head__title" data-account-when="in">Your account</h1>
-          <p class="section-head__blurb" data-account-when="out">
-            An account keeps your place on the list and your past orders in one
-            place. It is not needed to send the opening-notice form.
-          </p>
+          <h1 class="section-head__title">Your account</h1>
         </header>
-
-        <p class="account__status" data-account-status hidden></p>
-
-        <noscript>
-          <p class="account__note">
-            Signing in needs JavaScript. The opening-notice form on the home
-            page works without it.
-          </p>
-        </noscript>
-
-        <div class="account__card account__signed-in" data-account-when="in">
-          <p class="account__who">
-            Signed in as <strong data-account-name></strong>.
-          </p>
-          <!--
-            Filled here rather than by main.js, because an inline script blocks
-            the parser: it runs while the element above it is being built and
-            before anything is painted. The card and the name therefore arrive
-            in the same frame instead of the name appearing a moment after the
-            card that holds it.
-
-            Real text in the DOM, not a CSS ::after — a greeting has to be
-            selectable, and readable to a screen reader, which generated
-            content is not dependably either.
-          -->
+        <div class="account__card account__card--signed-in">
+          <p class="account__who">Signed in as <strong data-account-name></strong>.</p>
           <script>
-            if (window.__account) {
-              document.currentScript.parentNode
-                .querySelector("[data-account-name]")
-                .textContent = window.__account;
-            }
+            /* Beside the element on purpose: an inline script blocks the
+               parser, so the name is in place in the same frame as the card
+               that holds it rather than a moment later. */
+            (function () {
+              try {
+                var name = localStorage.getItem("qa.account");
+                if (name) document.querySelector("[data-account-name]").textContent = name;
+              } catch (error) {}
+            })();
           </script>
           <p class="account__note">
             A new account can reach what it is given and nothing more. Ask the
             bench if you need more than that.
           </p>
-          <button type="button" class="btn btn--ghost" data-account-sign-out>
-            Sign out
-          </button>
-        </div>
-
-        <div class="account__pair" data-account-when="out">
-          <div class="account__card">
-            <p class="account__title">New here</p>
-            <form data-account="sign-up" novalidate onsubmit="return false">
-              <div class="account__field">
-                <label for="account-name">Your name</label>
-                <input
-                  class="notify__input"
-                  id="account-name"
-                  name="name"
-                  autocomplete="name"
-                />
-              </div>
-              <div class="account__field">
-                <label for="account-email">Email</label>
-                <input
-                  class="notify__input"
-                  id="account-email"
-                  name="email"
-                  type="email"
-                  required
-                  autocomplete="email"
-                  placeholder="you@example.com"
-                />
-              </div>
-              <div class="account__field">
-                <label for="account-password">Password</label>
-                <input
-                  class="notify__input"
-                  id="account-password"
-                  name="password"
-                  type="password"
-                  required
-                  minlength="8"
-                  autocomplete="new-password"
-                  placeholder="At least 8 characters"
-                />
-              </div>
-              <button type="submit" class="btn btn--solid">
-                Create my account
-              </button>
-              <p class="account__status" data-account-note hidden></p>
-            </form>
-          </div>
-
-          <div class="account__card">
-            <p class="account__title">Already have one</p>
-            <form data-account="sign-in" novalidate onsubmit="return false">
-              <div class="account__field">
-                <label for="signin-email">Email</label>
-                <input
-                  class="notify__input"
-                  id="signin-email"
-                  name="email"
-                  type="email"
-                  required
-                  autocomplete="email"
-                  placeholder="you@example.com"
-                />
-              </div>
-              <div class="account__field">
-                <label for="signin-password">Password</label>
-                <input
-                  class="notify__input"
-                  id="signin-password"
-                  name="password"
-                  type="password"
-                  required
-                  autocomplete="current-password"
-                />
-              </div>
-              <button type="submit" class="btn btn--solid">Sign in</button>
-              <p class="account__status" data-account-note hidden></p>
-            </form>
-          </div>
+          <button type="button" class="btn btn--ghost" data-account-sign-out>Sign out</button>
         </div>
       </section>
     </main>
@@ -218,15 +124,13 @@
       </p>
       <ul data-list="site.contact.links" class="colophon__links">
         <li>
-          <a href="https://instagram.com/" rel="noopener" target="_blank">
-            Instagram
-          </a>
+          <a href="https://instagram.com/" rel="noopener" target="_blank">Instagram</a>
         </li>
         <li><a href="mailto:bench@qalam-ahar.example">Email the bench</a></li>
       </ul>
     </footer>
 
-    <script src="assets/js/render.js?v=8"></script>
-    <script src="assets/js/main.js?v=8"></script>
+    <script src="assets/js/render.js?v=9"></script>
+    <script src="assets/js/main.js?v=9"></script>
   </body>
 </html>
