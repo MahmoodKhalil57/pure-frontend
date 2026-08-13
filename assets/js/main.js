@@ -140,11 +140,8 @@
       }
     }
 
-    // The name the hint carried, so the greeting is not blank while the
-    // session check is in flight.
-    if (who && !who.textContent && document.documentElement.dataset.accountName) {
-      who.textContent = document.documentElement.dataset.accountName;
-    }
+    // The greeting is already filled, during parse, by the inline script beside
+    // it. Nothing to do here until the session check comes back.
 
     function refresh() {
       return fetch(root + "/auth/get-session", { credentials: "include" })
