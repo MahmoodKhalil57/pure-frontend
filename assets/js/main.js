@@ -66,6 +66,148 @@
     return isFilled(form.dataset.endpoint) ? form.dataset.endpoint : "";
   }
 
+  /* --- accounts -------------------------------------------------------------
+     A second binding type, wired the same way the notify form is: the symbol
+     says what it carries, the export stamps that onto the markup, and this
+     reads the markup. Nothing global, and nothing here decides what an account
+     may do — the node does, and it only ever hands a new one the default. */
+
+  function apiRoot(content) {
+    var backend = get(content, "site.backend") || {};
+    return isFilled(backend.url)
+      ? String(backend.url).replace(/\/+$/, "") + "/api"
+      : "";
+  }
+
+  function post(url, body) {
+    return fetch(url, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }).then(function (response) {
+      return response
+        .json()
+        .catch(function () {
+          return {};
+        })
+        .then(function (parsed) {
+          return { ok: response.ok, body: parsed };
+        });
+    });
+  }
+
+  function applyAccounts(content) {
+    var root = apiRoot(content);
+    var scope = document.querySelector('[data-symbol="account-forms"]');
+    if (!scope || !root) return;
+
+    var status = scope.querySelector("[data-account-status]");
+    var forms = scope.querySelector("[data-account-signed-out]");
+    var welcome = scope.querySelector("[data-account-signed-in]");
+    var who = scope.querySelector("[data-account-name]");
+
+    function say(node, message, isError) {
+      if (!node) return;
+      node.textContent = message || "";
+      node.hidden = !message;
+      if (isError) node.setAttribute("data-error", "");
+      else node.removeAttribute("data-error");
+    }
+
+    function paint(session) {
+      var signedIn = Boolean(session && session.user);
+      if (forms) forms.hidden = signedIn;
+      if (welcome) welcome.hidden = !signedIn;
+      if (signedIn && who) who.textContent = session.user.name || session.user.email;
+    }
+
+    function refresh() {
+      return fetch(root + "/auth/get-session", { credentials: "include" })
+        .then(function (response) {
+          return response.ok ? response.json() : null;
+        })
+        .catch(function () {
+          return null;
+        })
+        .then(paint);
+    }
+
+    var signUp = scope.querySelector('form[data-account="sign-up"]');
+    if (signUp) {
+      signUp.addEventListener("submit", function (event) {
+        event.preventDefault();
+        var note = signUp.querySelector("[data-account-note]");
+        var email = signUp.querySelector('[name="email"]').value;
+        var password = signUp.querySelector('[name="password"]').value;
+        var nameField = signUp.querySelector('[name="name"]');
+        say(note, "Creating your account…");
+
+        post(root + "/public/signup", {
+          email: email,
+          password: password,
+          name: nameField ? nameField.value : "",
+        })
+          .then(function (result) {
+            if (!result.ok) {
+              say(note, result.body.error || "That did not work.", true);
+              return null;
+            }
+            // Straight on to the same endpoint an existing visitor uses, so
+            // there is one place that mints a session.
+            return post(root + "/auth/sign-in/email", {
+              email: email,
+              password: password,
+            });
+          })
+          .then(function (result) {
+            if (!result) return;
+            say(note, result.ok ? "" : "Account created. Sign in below.");
+            if (result.ok) refresh();
+          })
+          .catch(function () {
+            say(note, "Could not reach the server.", true);
+          });
+      });
+    }
+
+    var signIn = scope.querySelector('form[data-account="sign-in"]');
+    if (signIn) {
+      signIn.addEventListener("submit", function (event) {
+        event.preventDefault();
+        var note = signIn.querySelector("[data-account-note]");
+        say(note, "Signing in…");
+        post(root + "/auth/sign-in/email", {
+          email: signIn.querySelector('[name="email"]').value,
+          password: signIn.querySelector('[name="password"]').value,
+        })
+          .then(function (result) {
+            if (!result.ok) {
+              say(note, "That email and password did not match.", true);
+              return;
+            }
+            say(note, "");
+            refresh();
+          })
+          .catch(function () {
+            say(note, "Could not reach the server.", true);
+          });
+      });
+    }
+
+    var out = scope.querySelector("[data-account-sign-out]");
+    if (out) {
+      out.addEventListener("click", function () {
+        post(root + "/auth/sign-out", {}).then(function () {
+          paint(null);
+        });
+      });
+    }
+
+    say(status, "");
+    refresh();
+  }
+
   function applyForms(content) {
     var mailto = get(content, "site.contact.email");
 
@@ -231,6 +373,7 @@
       });
       window.PureRender.bindAll(document, content, { asset: asset });
       applyForms(content);
+      applyAccounts(content);
 
       var lots = document.querySelectorAll(".lot");
       lots.forEach(function (node, index) {
