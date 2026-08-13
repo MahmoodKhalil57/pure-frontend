@@ -139,6 +139,37 @@
           ]
         }
       ]
+    },
+    {
+      "slug": "contact",
+      "name": "Write to the bench",
+      "status": "published",
+      "fields": [
+        {
+          "name": "email",
+          "label": "Your email",
+          "type": "email",
+          "required": true,
+          "fill": {
+            "from": "user.email",
+            "when": "signed-in",
+            "display": "hidden"
+          }
+        },
+        {
+          "name": "subject",
+          "label": "Subject",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "message",
+          "label": "Message",
+          "type": "textarea",
+          "required": true
+        }
+      ],
+      "successMessage": "Thank you — it is with the bench."
     }
   ]
 }
