@@ -35,7 +35,15 @@
 (function () {
   "use strict";
 
-  var SITE_BASE = new URL("..", location.href);
+  /* Hosted by the adminCms panel, which serves this page from the node so the
+     node's session cookie reaches its API. The panel has already been granted
+     the repository — the builder borrows that rather than asking a second
+     time, so there is no token here and no Connect button. */
+  var HOST = window.__ADMINCMS_BUILDER__ || null;
+
+  var SITE_BASE = HOST && HOST.site
+    ? new URL(String(HOST.site).replace(/\/*$/, "/"))
+    : new URL("..", location.href);
   var PROJECT_PATH = "content/page.grapes.json";
   var PAGES_DIR = "content/pages"; // Sveltia-owned: one entry file per page
   var SYMBOLS_DIR = "content/symbols"; // Sveltia-owned: one entry file per symbol
@@ -68,7 +76,7 @@
     pages: [], // declared pages from content/pages.json
     symbols: [], // symbol registry from content/symbols.json
     newSymbolIds: [], // registry rows minted in this session ("Make reusable")
-    mode: null, // "github" | "local"
+    mode: HOST ? "admincms" : null, // "admincms" | "github" | "local"
     repo: null, // "owner/name", from config.yml
     branch: "master",
     token: localStorage.getItem(TOKEN_KEY) || "",
@@ -260,6 +268,11 @@
       every entry. Resolves null when no backend is connected — callers fall
       back to the last baked manifest. */
   function listBackendEntries(dir) {
+    if (state.mode === "admincms") {
+      return apiListDir(dir).catch(function () {
+        return [];
+      });
+    }
     if (state.mode === "github") {
       return ghFetch("/contents/" + dir + "?ref=" + encodeURIComponent(state.branch))
         .then(function (items) {
@@ -786,7 +799,70 @@
      pages) with the page's Sveltia title/description applied + the drawing +
      freshly baked CMS data + the site's script tags. */
 
+  /* --- adminCms backend -------------------------------------------------------
+     The node holds the repository connection; these three calls are the whole
+     surface the builder needs from it. */
+
+  function apiFetch(path, opts) {
+    opts = opts || {};
+    return fetch(HOST.api + path, {
+      method: opts.method || "GET",
+      // Same-origin with the node, which is why the panel serves this page.
+      credentials: "same-origin",
+      headers: opts.body ? { "Content-Type": "application/json" } : undefined,
+      body: opts.body ? JSON.stringify(opts.body) : undefined,
+    }).then(function (res) {
+      return res
+        .json()
+        .catch(function () {
+          return {};
+        })
+        .then(function (body) {
+          if (!res.ok) throw new Error(body.error || "HTTP " + res.status);
+          return body;
+        });
+    });
+  }
+
+  function apiReadFile(path) {
+    return apiFetch("/api/builder/file?path=" + encodeURIComponent(path)).then(
+      function (body) {
+        return body.text;
+      }
+    );
+  }
+
+  /* Parsed entries, matching what the other backends hand back. Returning the
+     wrapper instead loses every entry silently: the builder reads no ids, takes
+     the registry for empty, and rewrites the entry files it should have left
+     alone — taking their bindings with them. */
+  function apiListDir(dir) {
+    return apiFetch(
+      "/api/builder/file?kind=dir&path=" + encodeURIComponent(dir)
+    ).then(function (body) {
+      return (body.entries || [])
+        .map(function (entry) {
+          try {
+            return JSON.parse(entry.text);
+          } catch (error) {
+            return null;
+          }
+        })
+        .filter(Boolean);
+    });
+  }
+
+  function apiCommit(files, message) {
+    return apiFetch("/api/builder/commit", {
+      method: "POST",
+      body: { message: message, files: files },
+    });
+  }
+
   function readBackendFile(path) {
+    if (state.mode === "admincms") {
+      return apiReadFile(path);
+    }
     if (state.mode === "local" && state.dirHandle) {
       var parts = path.split("/");
       var walk = Promise.resolve(state.dirHandle);
@@ -1054,6 +1130,8 @@
       sign-in surface: when its token works, the builder's own connection
       controls disappear entirely and Save just works. */
   function autoConnectGithub() {
+    // The panel is already the connection; nothing to reconnect.
+    if (HOST) return;
     var token = sveltiaToken() || state.token;
     if (!state.repo || !token) return;
     state.token = token;
@@ -1177,9 +1255,13 @@
             status("Saved to the local folder. Commit and push when it looks right.");
           });
         }
-        return ghCommit(files, "page: edit in the visual builder").then(function () {
+        var commit =
+          state.mode === "admincms"
+            ? apiCommit(files, "page: edit in the visual builder")
+            : ghCommit(files, "page: edit in the visual builder");
+        return commit.then(function () {
           state.newSymbolIds = [];
-          status("Committed to " + state.branch + " — GitHub Pages redeploys in about a minute.");
+          status("Committed — GitHub Pages redeploys in about a minute.");
         });
       })
       .catch(function (err) {
@@ -1250,7 +1332,14 @@
       status("GrapesJS did not load — check the network and the pinned CDN line.", true);
       return;
     }
-    if ("showDirectoryPicker" in window) ui.local.hidden = false;
+    // The panel already holds the connection, so the builder shows no way to
+    // make a second one and Save is live from the start.
+    if (HOST) {
+      ui.github.hidden = true;
+      ui.local.hidden = true;
+      ui.save.disabled = false;
+    }
+    if (!HOST && "showDirectoryPicker" in window) ui.local.hidden = false;
     // Inside the dashboard, the CMS owns authentication: the builder never
     // asks for its own token there.
     if (state.embedded) ui.github.hidden = true;
@@ -1373,8 +1462,8 @@
       builder" action opens the builder scoped to what was being edited. */
   function applyFocus() {
     var match = /[?&]focus=([^&]+)/.exec(location.search);
-    if (!match) return;
-    var focus = decodeURIComponent(match[1]);
+    var focus = HOST && HOST.focus ? HOST.focus : match ? decodeURIComponent(match[1]) : "";
+    if (!focus) return;
     var kind = focus.split(":")[0];
     var target = focus.split(":")[1];
     var editor = state.editor;

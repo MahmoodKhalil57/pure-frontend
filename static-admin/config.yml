@@ -121,7 +121,10 @@ collections:
   # builder owns what it LOOKS like. Each entry is one file; the builder
   # bakes aggregated manifests (content/pages.json, content/symbols.json)
   # on save for the static runtime to read.
+  # Drawn in the visual builder, not typed into a form: the entry here says
+  # what a page IS, the builder says how it looks.
   - name: pages
+    builder: true
     label: Pages
     label_singular: Page
     icon: web
@@ -163,6 +166,7 @@ collections:
         hint: Lower numbers come first in the menu.
 
   - name: symbols
+    builder: true
     label: Symbols
     label_singular: Symbol
     icon: extension
