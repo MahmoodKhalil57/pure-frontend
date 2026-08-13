@@ -60,7 +60,7 @@
         <div class="account__pair" data-account-signed-out>
           <div class="account__card">
             <p class="account__title">Create an account</p>
-            <form data-account="sign-up" novalidate>
+            <form data-account="sign-up" novalidate onsubmit="return false">
               <div class="account__field">
                 <label for="account-name">Your name</label>
                 <input
@@ -102,7 +102,7 @@
 
           <div class="account__card">
             <p class="account__title">Already have one</p>
-            <form data-account="sign-in" novalidate>
+            <form data-account="sign-in" novalidate onsubmit="return false">
               <div class="account__field">
                 <label for="signin-email">Email</label>
                 <input
