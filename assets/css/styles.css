@@ -943,3 +943,22 @@ html.js .lot:not(.is-revealed) {
 .passkey__remove[disabled] {
   opacity: 0.5;
 }
+
+/* The account's own details, kept visually apart from the sign-in furniture
+   around it — this is the one part of the page the person is here to change. */
+.account__profiles {
+  padding-top: 1.25rem;
+  margin-top: 1.5rem;
+  border-top: var(--rule);
+}
+
+.account__profile + .account__profile {
+  padding-top: 1.5rem;
+  margin-top: 1.5rem;
+  border-top: var(--rule);
+}
+
+.account__profile select,
+.account__profile textarea {
+  width: 100%;
+}
