@@ -306,6 +306,10 @@ collections:
   # ---------------------------------------------------------------------------
   - name: "project"
     label: "Forms & project"
+    # The site's sign-up form is markup baked into index.html; no page reads
+    # this file at render time. Previewing the site here would suggest editing
+    # it changes that page, so the panel previews the forms themselves.
+    preview: "forms"
     files:
       - name: "admin-cms"
         label: "Forms & project"
@@ -320,21 +324,21 @@ collections:
             widget: "object"
             fields:
               - { name: "name", label: "Name", widget: "string" }
-              - { name: "slug", label: "Slug", widget: "string", hint: "Lowercase, dashes only." }
+              - { name: "slug", label: "Slug", widget: "string", mono: true, hint: "Lowercase, dashes only." }
 
           - name: "forms"
             label: "Forms"
             widget: "list"
             hint: "Each form here is one form your node will serve."
             fields:
-              - { name: "slug", label: "Slug", widget: "string", hint: "Used in the form's URL. Changing it breaks existing links." }
+              - { name: "slug", label: "Slug", widget: "string", mono: true, hint: "Used in the form's URL. Changing it breaks existing links." }
               - { name: "name", label: "Name", widget: "string" }
 
               - name: "fields"
                 label: "Fields"
                 widget: "list"
                 fields:
-                  - { name: "name", label: "Key", widget: "string", hint: "How the value is stored in a submission." }
+                  - { name: "name", label: "Key", widget: "string", mono: true, hint: "How the value is stored in a submission." }
                   - { name: "label", label: "Label", widget: "string" }
                   - name: "type"
                     label: "Type"
@@ -351,9 +355,11 @@ collections:
                     label: "Choices"
                     widget: "list"
                     required: false
-                    hint: "Only for a Select field."
+                    # Meaningless on anything but a select, so it is drawn only
+                    # for one rather than captioned "ignore me" on every field.
+                    condition: { field: "type", value: "select" }
                     fields:
-                      - { name: "value", label: "Value", widget: "string" }
+                      - { name: "value", label: "Value", widget: "string", mono: true }
                       - { name: "label", label: "Label", widget: "string" }
                   - name: "showWhen"
                     label: "Show only when"
@@ -361,7 +367,7 @@ collections:
                     required: false
                     hint: "Leave blank to always show this field."
                     fields:
-                      - { name: "field", label: "Depends on field", widget: "string", required: false }
+                      - { name: "field", label: "Depends on field", widget: "string", mono: true, required: false }
                       - name: "is"
                         label: "Condition"
                         widget: "select"
