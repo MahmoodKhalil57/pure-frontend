@@ -859,3 +859,16 @@ html.js .lot:not(.is-revealed) {
   margin: 0;
   font-size: var(--step-1);
 }
+
+/* The code is read off a phone and typed in one go, so it is set large and
+   spaced — the same mono face the labels use. */
+.account__code {
+  font-family: var(--face-util);
+  font-size: 1.5rem;
+  letter-spacing: 0.4em;
+  text-align: center;
+}
+
+.account__card [data-account-step] .btn + .btn {
+  margin-inline-start: 0.5rem;
+}
