@@ -151,6 +151,23 @@ collections:
         widget: text
         required: false
         hint: What search engines and link previews show.
+      - label: Who it is for
+        name: access
+        widget: select
+        required: false
+        default: public
+        hint: >-
+          Anyone, or only visitors who are signed in or signed out. Someone who
+          does not match is sent to the page named below.
+        options:
+          - { label: Anyone, value: public }
+          - { label: Only when signed in, value: signed-in }
+          - { label: Only when signed out, value: signed-out }
+      - label: Send them to
+        name: redirect_to
+        widget: string
+        required: false
+        hint: Slug of the page to send them to instead, e.g. login.
       - label: Menu label
         name: nav_label
         widget: string
