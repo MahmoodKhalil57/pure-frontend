@@ -872,3 +872,28 @@ html.js .lot:not(.is-revealed) {
 .account__card [data-account-step] .btn + .btn {
   margin-inline-start: 0.5rem;
 }
+
+/* The second door on the sign-in page, kept quieter than the first: a code
+   always works, a passkey only works on a device that has one. */
+.account__aside {
+  padding-top: 1.25rem;
+  margin-top: 1.5rem;
+  border-top: var(--rule);
+}
+
+.account__or {
+  margin: 0 0 1rem;
+  font-family: var(--face-util);
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ahar-dim);
+  text-align: center;
+}
+
+.account__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
