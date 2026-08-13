@@ -114,16 +114,36 @@
       else node.removeAttribute("data-error");
     }
 
-    /* One attribute says which state a piece of the page belongs to, so the
-       heading, the blurb and the forms all answer to the same switch. */
+    /* One attribute on <html> says which half of the page is drawn, and CSS
+       does the drawing. The inline script in the head has already set it from
+       the stored hint, so by the time this runs the page is usually already
+       right and nothing moves; when the hint was wrong — a session that
+       expired since — this is what corrects it. */
     function paint(session) {
       var signedIn = Boolean(session && session.user);
-      scope.querySelectorAll("[data-account-when]").forEach(function (node) {
-        node.hidden = node.dataset.accountWhen !== (signedIn ? "in" : "out");
-      });
-      if (signedIn && who) who.textContent = session.user.name || session.user.email;
+      var name = signedIn ? session.user.name || session.user.email : "";
+
+      if (signedIn) document.documentElement.dataset.account = "in";
+      else delete document.documentElement.dataset.account;
+
+      if (who) who.textContent = name;
       // The page is not "Sign in" once you are.
       if (heading) heading.textContent = signedIn ? "Your account" : "Sign in";
+
+      // Remembered so the next visit paints straight into the right state. A
+      // display hint, never a credential: the server is asked every time.
+      try {
+        if (signedIn) localStorage.setItem("qa.account", name);
+        else localStorage.removeItem("qa.account");
+      } catch (error) {
+        /* storage refused; the page still works, it just flashes once */
+      }
+    }
+
+    // The name the hint carried, so the greeting is not blank while the
+    // session check is in flight.
+    if (who && !who.textContent && document.documentElement.dataset.accountName) {
+      who.textContent = document.documentElement.dataset.accountName;
     }
 
     function refresh() {
