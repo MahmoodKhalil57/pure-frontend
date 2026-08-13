@@ -318,10 +318,12 @@
               return navigator.credentials.create({ publicKey: options });
             })
             .then(function (credential) {
-              return post(
-                root + "/auth/passkey/verify-registration",
-                credentialJson(credential),
-              );
+              // The credential goes in `response`; a name beside it is what
+              // the panel lists it as later.
+              return post(root + "/auth/passkey/verify-registration", {
+                response: credentialJson(credential),
+                name: navigator.platform || "This device",
+              });
             })
             .then(function (result) {
               say(
@@ -368,10 +370,9 @@
               return navigator.credentials.get({ publicKey: options });
             })
             .then(function (credential) {
-              return post(
-                root + "/auth/passkey/verify-authentication",
-                credentialJson(credential),
-              );
+              return post(root + "/auth/passkey/verify-authentication", {
+                response: credentialJson(credential),
+              });
             })
             .then(function (result) {
               if (!result.ok) {
