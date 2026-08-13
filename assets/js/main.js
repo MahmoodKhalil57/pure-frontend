@@ -79,9 +79,9 @@
       : "";
   }
 
-  function post(url, body) {
+  function post(url, body, method) {
     return fetch(url, {
-      method: "POST",
+      method: method || "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
@@ -154,6 +154,126 @@
         return { ok: response.ok, body: body };
       });
     });
+  }
+
+  /* --- the account's own details -------------------------------------------
+     A form bound to the account, drawn from the same definition the builder
+     writes and the panel edits. Nothing here knows whose row it is: the server
+     takes that from the session, so there is no id to send and none to forge. */
+
+  function profileField(field, value) {
+    var wrap = document.createElement("div");
+    wrap.className = "account__field";
+
+    var id = "profile-" + field.name;
+    var label = document.createElement("label");
+    label.setAttribute("for", id);
+    label.textContent = field.label || field.name;
+    if (field.required) label.textContent += " *";
+    wrap.appendChild(label);
+
+    var input;
+    if (field.type === "textarea") {
+      input = document.createElement("textarea");
+      input.rows = 3;
+    } else if (field.type === "select") {
+      input = document.createElement("select");
+      (field.options || []).forEach(function (choice) {
+        var option = document.createElement("option");
+        option.value = typeof choice === "string" ? choice : choice.value;
+        option.textContent = typeof choice === "string" ? choice : choice.label;
+        input.appendChild(option);
+      });
+    } else {
+      input = document.createElement("input");
+      input.type = field.type === "email" ? "email" : field.type === "tel" ? "tel" : "text";
+    }
+
+    input.id = id;
+    input.name = field.name;
+    input.className = "notify__input";
+    if (field.placeholder) input.placeholder = field.placeholder;
+    if (value !== undefined && value !== null) input.value = value;
+    wrap.appendChild(input);
+    return wrap;
+  }
+
+  function applyProfile(root) {
+    var host = document.querySelector("[data-profile]");
+    if (!host) return;
+
+    getJson(root + "/api/me/profile")
+      .then(function (result) {
+        if (!result.ok) return;
+        var forms = (result.body && result.body.forms) || [];
+        host.replaceChildren();
+        if (!forms.length) return;
+        host.hidden = false;
+
+        forms.forEach(function (form) {
+          var section = document.createElement("form");
+          section.className = "account__profile";
+          section.setAttribute("novalidate", "");
+          section.onsubmit = function () {
+            return false;
+          };
+
+          var heading = document.createElement("p");
+          heading.className = "account__title";
+          heading.textContent = form.name;
+          section.appendChild(heading);
+
+          // Said plainly, and only when it is true: the page is asking for
+          // something before it can get on.
+          if (!form.complete && form.requiredAtSignup) {
+            var ask = document.createElement("p");
+            ask.className = "account__note";
+            ask.textContent = "We need these before your first order.";
+            section.appendChild(ask);
+          }
+
+          form.fields.forEach(function (field) {
+            section.appendChild(profileField(field, form.values[field.name]));
+          });
+
+          var note = document.createElement("p");
+          note.className = "account__status";
+          note.hidden = true;
+
+          var save = document.createElement("button");
+          save.type = "submit";
+          save.className = "btn btn--solid";
+          save.textContent = "Save";
+          section.appendChild(save);
+          section.appendChild(note);
+
+          section.addEventListener("submit", function (event) {
+            event.preventDefault();
+            var values = {};
+            form.fields.forEach(function (field) {
+              var input = section.querySelector('[name="' + field.name + '"]');
+              if (input) values[field.name] = input.value;
+            });
+            say(note, "Saving…");
+            post(root + "/api/me/profile", { slug: form.slug, values: values }, "PUT")
+              .then(function (res) {
+                if (!res.ok) {
+                  say(note, res.body.error || "That did not save.", true);
+                  return;
+                }
+                say(note, "Saved.");
+              })
+              .catch(function () {
+                say(note, "Could not reach the server.", true);
+              });
+          });
+
+          host.appendChild(section);
+        });
+      })
+      .catch(function () {
+        /* signed out, or forms are off — the section simply stays empty */
+      });
   }
 
   function applyAccounts(content) {
@@ -477,6 +597,7 @@
 
     refresh();
     drawPasskeys();
+    applyProfile(root.replace(/\/api$/, ""));
   }
 
   function applyForms(content) {
