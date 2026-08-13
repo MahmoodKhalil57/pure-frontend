@@ -26,6 +26,9 @@
     <style>
       .account { max-width: 52rem; margin: 0 auto; padding: 4rem 1.25rem 6rem; }
       .account__pair { display: grid; gap: 1.5rem; }
+      /* An explicit `display` beats the `hidden` attribute, so signing in
+         would otherwise leave the forms sitting under the welcome. */
+      .account__pair[hidden] { display: none; }
       @media (min-width: 46rem) { .account__pair { grid-template-columns: 1fr 1fr; } }
       .account__card {
         padding: 1.5rem;
