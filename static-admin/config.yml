@@ -202,6 +202,9 @@ collections:
             options:
               - { label: None — purely visual, value: none }
               - { label: Form — submits to the backend, value: form }
+              # Sign-up and sign-in against this site's node. The node decides
+              # what a new account may do; the site only draws the forms.
+              - { label: Account — sign up and sign in, value: account }
           - label: Form
             name: form
             widget: string
