@@ -97,13 +97,23 @@
     });
   }
 
+  /* Which visitors a page is for, and where the others go. Read from the page
+     itself, which the export stamped from the page's entry in the CMS. */
+  function pageRule() {
+    var read = function (name) {
+      var node = document.querySelector('meta[name="' + name + '"]');
+      return node ? node.getAttribute("content") : "";
+    };
+    return { needs: read("page-access"), to: read("page-redirect") };
+  }
+
   function applyAccounts(content) {
     var root = apiRoot(content);
-    var scope = document.querySelector('[data-symbol="account-forms"]');
-    if (!scope || !root) return;
+    // The whole document, not one symbol: the masthead has a sign-out on some
+    // sites and the forms live on their own pages now.
+    var scope = document;
+    if (!root) return;
 
-    var status = scope.querySelector("[data-account-status]");
-    var who = scope.querySelector("[data-account-name]");
 
     function say(node, message, isError) {
       if (!node) return;
@@ -125,7 +135,9 @@
       if (signedIn) document.documentElement.dataset.account = "in";
       else delete document.documentElement.dataset.account;
 
-      if (who) who.textContent = name;
+      document.querySelectorAll("[data-account-name]").forEach(function (node) {
+        node.textContent = name;
+      });
       // The heading is not set here: both are in the markup and CSS shows the
       // one that matches. Writing it from script is what made it flip.
 
@@ -137,6 +149,14 @@
       } catch (error) {
         /* storage refused; the page still works, it just flashes once */
       }
+
+      // The head made the same call from the stored hint before painting; this
+      // is the one that knows, and it catches a hint that had gone stale.
+      var rule = pageRule();
+      var wrong =
+        (rule.needs === "signed-in" && !signedIn) ||
+        (rule.needs === "signed-out" && signedIn);
+      if (wrong && rule.to) location.replace(rule.to);
     }
 
     // The greeting is already filled, during parse, by the inline script beside
@@ -224,7 +244,6 @@
       });
     }
 
-    say(status, "");
     refresh();
   }
 
