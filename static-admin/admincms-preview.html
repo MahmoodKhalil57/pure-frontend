@@ -45,6 +45,30 @@
        rhythm around it to breathe against. */
     .preview-scoped > * { margin-block: 0; }
     .preview-scoped { padding-block: 1rem; }
+
+    /* The card below is the panel speaking, not the site: a page's title and
+       description never appear on the page itself, so they are shown as what
+       they actually produce. It is deliberately plain so it cannot be mistaken
+       for the design being previewed. */
+    .preview-meta {
+      margin: 0.75rem; padding: 0.75rem 0.9rem;
+      font: 400 13px/1.5 system-ui, sans-serif; color: #1f2937;
+      background: #fff; border: 1px solid #d8dee6; border-radius: 10px;
+    }
+    .preview-meta__label {
+      margin: 0 0 0.5rem; font-size: 10px; font-weight: 700; letter-spacing: 0.09em;
+      color: #6b7280; text-transform: uppercase;
+    }
+    .preview-meta__tab {
+      display: inline-flex; gap: 0.4rem; align-items: center; max-width: 100%;
+      padding: 0.3rem 0.7rem; overflow: hidden; font-size: 12px; color: #374151;
+      white-space: nowrap; text-overflow: ellipsis;
+      background: #eef1f5; border-radius: 7px 7px 0 0;
+    }
+    .preview-meta__url { margin: 0.6rem 0 0.1rem; font-size: 12px; color: #0b7285; }
+    .preview-meta__title { margin: 0; font-size: 16px; color: #1a4fd6; }
+    .preview-meta__desc { margin: 0.15rem 0 0; color: #4b5563; }
+    .preview-meta__empty { color: #9ca3af; font-style: italic; }
   </style>
 </head>
 <body>
@@ -66,6 +90,8 @@
     var ready = false;
     var pending = null;
     var bodyHtml = "";
+    // Bodies of pages other than the homepage, fetched on demand.
+    var pageBodies = {};
 
     function say(message) {
       if (!message) { status.hidden = true; return; }
@@ -130,6 +156,67 @@
       });
     }
 
+    function escapeText(value) {
+      return String(value == null ? "" : value).replace(/[&<>"]/g, function (c) {
+        return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+      });
+    }
+
+    /* What a page entry produces that the page itself never shows: the browser
+       tab and the search result. Without this the fields being edited have no
+       visible effect anywhere, which is what an empty preview pane meant. */
+    function metaCard(draft) {
+      var data = (draft && draft.data) || {};
+      var slug = String(data.slug || draft.id || "index");
+      var title = String(data.title || "");
+      var description = String(data.description || "");
+      var host = SITE_BASE.host;
+      var path = slug === "index" ? "/" : "/" + slug + ".html";
+
+      var card = document.createElement("div");
+      card.className = "preview-meta";
+      card.innerHTML =
+        '<p class="preview-meta__label">Browser tab and search result</p>' +
+        '<span class="preview-meta__tab">' +
+        (title
+          ? escapeText(title)
+          : '<span class="preview-meta__empty">Untitled</span>') +
+        "</span>" +
+        '<p class="preview-meta__url">' + escapeText(host + path) + "</p>" +
+        '<p class="preview-meta__title">' +
+        (title
+          ? escapeText(title)
+          : '<span class="preview-meta__empty">Untitled</span>') +
+        "</p>" +
+        '<p class="preview-meta__desc">' +
+        (description
+          ? escapeText(description)
+          : '<span class="preview-meta__empty">No description — search engines will pick their own text.</span>') +
+        "</p>";
+      return card;
+    }
+
+    function pageFile(slug) {
+      return !slug || slug === "index" ? "index.html" : slug + ".html";
+    }
+
+    /* A page entry previews its own document, not the homepage. */
+    function bodyFor(draft) {
+      if (!draft || draft.collection !== "pages") return Promise.resolve(bodyHtml);
+      var file = pageFile(draft.data && draft.data.slug ? draft.data.slug : draft.id);
+      if (file === "index.html") return Promise.resolve(bodyHtml);
+      if (pageBodies[file] != null) return Promise.resolve(pageBodies[file]);
+      return fetch(new URL(file, SITE_BASE).href, { cache: "no-cache" })
+        .then(function (r) { return r.ok ? r.text() : ""; })
+        .then(function (html) {
+          // A page that has been declared but never exported yet has no file;
+          // the homepage stands in so the frame is not blank.
+          pageBodies[file] = html ? stripBody(html) : bodyHtml;
+          return pageBodies[file];
+        })
+        .catch(function () { return bodyHtml; });
+    }
+
     /**
      * Which part of the page this entry is responsible for.
      *
@@ -140,6 +227,11 @@
       if (!draft || !draft.collection) return null;
       var collection = draft.collection;
       var id = draft.id;
+
+      // A page entry owns the whole document rather than a piece of one. Its
+      // fields are the file name, the head metadata and one line of the menu —
+      // scoping to the menu alone showed an empty strip.
+      if (collection === "pages") return null;
 
       // A symbol is drawn on the page under its own id.
       if (collection === "symbols" && id) {
@@ -178,14 +270,19 @@
     function paint(draft) {
       if (!ready) { pending = draft; return; }
       if (!window.PureRender) { say("Renderer missing."); return; }
+      bodyFor(draft).then(function (html) {
+        render(draft, html);
+      });
+    }
 
+    function render(draft, html) {
       var content = merge(draft);
 
       // Bind the whole page first: a symbol's list looks up its own host with
       // closest("[data-symbol]"), so binding a detached fragment on its own
       // would leave those lists unrendered.
       var page = document.createElement("div");
-      page.innerHTML = bodyHtml;
+      page.innerHTML = html;
 
       try {
         window.PureRender.bindAll(page, content, {
@@ -201,6 +298,7 @@
       var scope = draft && draft.mode === "page" ? null : scopeFor(page, draft, content);
 
       surface.innerHTML = "";
+      if (draft && draft.collection === "pages") surface.appendChild(metaCard(draft));
       if (scope && scope.length) {
         surface.className = "preview-scoped";
         scope.forEach(function (node) { surface.appendChild(node); });
