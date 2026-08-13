@@ -12,9 +12,12 @@
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=Instrument+Sans:wght@400..700&amp;display=swap"
     />
-    <link rel="stylesheet" href="assets/css/styles.css" />
+    <!-- ?v= is a cache buster. GitHub Pages serves these with max-age=14400,
+         so without it a stylesheet change takes up to four hours to reach
+         anyone who has already visited. Bump it when the assets change. -->
+    <link rel="stylesheet" href="assets/css/styles.css?v=3" />
     <!-- Styles authored in the visual builder land here; styles.css stays hand-written. -->
-    <link rel="stylesheet" href="assets/css/page.css" />
+    <link rel="stylesheet" href="assets/css/page.css?v=3" />
   </head>
 
   <body>
@@ -23,7 +26,9 @@
       <p data-text="site.announcement"></p>
     </aside>
 
-    <header class="masthead">
+    <!-- The same drawing as the homepage's, placed here. Editing the symbol in
+         the builder changes both. -->
+    <header data-symbol="site-header" class="masthead">
       <a href="./" class="brand">
         <span lang="ar" dir="rtl" class="brand__ar">قلم و آهار</span>
         <span class="brand__latin">Qalam &amp; Ahar</span>
@@ -31,6 +36,9 @@
       <nav aria-label="Sections" data-list="pages.pages" class="masthead__nav">
         <a href="./">Home</a>
       </nav>
+      <a href="./#notify" class="btn btn--ghost masthead__cta">
+        Get the opening notice
+      </a>
     </header>
 
     <main id="main">
@@ -42,15 +50,22 @@
       <section data-symbol="account-forms" class="account">
         <header class="section-head">
           <p class="eyebrow">Your account</p>
-          <h2 class="section-head__title">Sign in</h2>
+          <h1 class="section-head__title">Sign in</h1>
+          <p class="section-head__blurb">
+            An account keeps your place on the list and your past orders in one
+            place. It is not needed to send the opening-notice form.
+          </p>
         </header>
 
         <p class="account__status" data-account-status hidden></p>
 
-        <div class="account__card" data-account-signed-in hidden>
-          <p>Signed in as <strong data-account-name></strong>.</p>
+        <div class="account__card account__signed-in" data-account-signed-in hidden>
+          <p class="account__who">
+            Signed in as <strong data-account-name></strong>.
+          </p>
           <p class="account__note">
-            A new account can reach what it is given and nothing more.
+            A new account can reach what it is given and nothing more. Ask the
+            bench if you need more than that.
           </p>
           <button type="button" class="btn btn--ghost" data-account-sign-out>
             Sign out
@@ -59,7 +74,7 @@
 
         <div class="account__pair" data-account-signed-out>
           <div class="account__card">
-            <p class="account__title">Create an account</p>
+            <p class="account__title">New here</p>
             <form data-account="sign-up" novalidate onsubmit="return false">
               <div class="account__field">
                 <label for="account-name">Your name</label>
@@ -79,6 +94,7 @@
                   type="email"
                   required
                   autocomplete="email"
+                  placeholder="you@example.com"
                 />
               </div>
               <div class="account__field">
@@ -91,6 +107,7 @@
                   required
                   minlength="8"
                   autocomplete="new-password"
+                  placeholder="At least 8 characters"
                 />
               </div>
               <button type="submit" class="btn btn--solid">
@@ -112,6 +129,7 @@
                   type="email"
                   required
                   autocomplete="email"
+                  placeholder="you@example.com"
                 />
               </div>
               <div class="account__field">
@@ -133,12 +151,22 @@
       </section>
     </main>
 
-    <footer class="colophon">
+    <footer data-symbol="site-footer" class="colophon">
       <p lang="ar" dir="rtl" class="colophon__ar">قلم و آهار</p>
-      <ul data-list="site.contact.links" class="colophon__links"></ul>
+      <p class="colophon__note">
+        Cut and cooked in a two-bench workshop. Nothing is kept in stock.
+      </p>
+      <ul data-list="site.contact.links" class="colophon__links">
+        <li>
+          <a href="https://instagram.com/" rel="noopener" target="_blank">
+            Instagram
+          </a>
+        </li>
+        <li><a href="mailto:bench@qalam-ahar.example">Email the bench</a></li>
+      </ul>
     </footer>
 
-    <script src="assets/js/render.js"></script>
-    <script src="assets/js/main.js"></script>
+    <script src="assets/js/render.js?v=3"></script>
+    <script src="assets/js/main.js?v=3"></script>
   </body>
 </html>
