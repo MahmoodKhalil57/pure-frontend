@@ -14,9 +14,9 @@
       href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=Instrument+Sans:wght@400..700&amp;display=swap"
     />
     <!-- ?v= is a cache buster: GitHub Pages serves these with max-age=14400. -->
-    <link rel="stylesheet" href="assets/css/styles.css?v=10" />
+    <link rel="stylesheet" href="assets/css/styles.css?v=11" />
     <!-- Styles authored in the visual builder land here; styles.css stays hand-written. -->
-    <link rel="stylesheet" href="assets/css/page.css?v=10" />
+    <link rel="stylesheet" href="assets/css/page.css?v=11" />
 
     <!--
       Who this page is for, taken from its entry in the Pages collection and
@@ -112,7 +112,18 @@
             A new account can reach what it is given and nothing more. Ask the
             bench if you need more than that.
           </p>
-          <button type="button" class="btn btn--ghost" data-account-sign-out>Sign out</button>
+          <div class="account__actions">
+            <button type="button" class="btn btn--solid" data-passkey-add>
+              Add a passkey to this device
+            </button>
+            <button type="button" class="btn btn--ghost" data-account-sign-out>Sign out</button>
+          </div>
+          <p class="account__status" data-passkey-note hidden></p>
+          <p class="account__note">
+            A passkey signs you in with the same face, fingerprint or PIN that
+            unlocks this device. Nothing to type, and nothing worth stealing —
+            the private half never leaves it.
+          </p>
         </div>
       </section>
     </main>
@@ -130,7 +141,7 @@
       </ul>
     </footer>
 
-    <script src="assets/js/render.js?v=10"></script>
-    <script src="assets/js/main.js?v=10"></script>
+    <script src="assets/js/render.js?v=11"></script>
+    <script src="assets/js/main.js?v=11"></script>
   </body>
 </html>
