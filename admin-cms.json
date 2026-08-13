@@ -170,6 +170,35 @@
         }
       ],
       "successMessage": "Thank you — it is with the bench."
+    },
+    {
+      "slug": "your-details",
+      "name": "Your details",
+      "status": "published",
+      "fields": [
+        {
+          "name": "first_name",
+          "label": "First name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "last_name",
+          "label": "Last name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "email",
+          "label": "Email",
+          "type": "email",
+          "fill": {
+            "from": "user.email",
+            "when": "signed-in",
+            "display": "locked"
+          }
+        }
+      ]
     }
   ]
 }
