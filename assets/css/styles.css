@@ -703,9 +703,22 @@ html.js .lot:not(.is-revealed) {
   gap: clamp(2rem, 5vw, 3.5rem);
 }
 
-/* An explicit `display` beats the `hidden` attribute, so signing in would
-   otherwise leave the forms sitting under the welcome. */
-.account__pair[hidden] {
+/* Which half of the page is drawn comes from an attribute on <html>, set
+   before first paint, rather than from script reaching in once the session
+   check has come back. That ordering is the difference between a page that
+   arrives correct and one that corrects itself in front of you.
+
+   Signed out is the default, so a browser with no JavaScript — which cannot
+   sign in anyway — gets a page that never moves. */
+[data-account-when="in"] {
+  display: none;
+}
+
+:root[data-account="in"] [data-account-when="in"] {
+  display: block;
+}
+
+:root[data-account="in"] [data-account-when="out"] {
   display: none;
 }
 
