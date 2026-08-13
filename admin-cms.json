@@ -1,6 +1,6 @@
 {
-  "$schema": "https://admincms-master.the-montiapple.workers.dev/schema/v1/project.json",
-  "version": 1,
+  "$schema": "./admin-cms.schema.json",
+  "version": 2,
   "project": {
     "name": "Qalam & Ahar",
     "slug": "qalam-ahar"
@@ -9,6 +9,8 @@
     {
       "slug": "opening-notice",
       "name": "Opening notice",
+      "status": "published",
+      "successMessage": "You are on the list. Watch your inbox.",
       "fields": [
         {
           "name": "email",
@@ -24,8 +26,7 @@
           "width": "half"
         }
       ],
-      "settings": {
-        "confirmationMessage": "You are on the list. Watch your inbox.",
+      "site": {
         "submitLabel": "Put my name down",
         "spamProtection": "honeypot",
         "retentionDays": 0
@@ -34,6 +35,8 @@
     {
       "slug": "wholesale",
       "name": "Wholesale enquiry",
+      "status": "published",
+      "successMessage": "Thanks — we will come back to you with sizes and lead times.",
       "fields": [
         {
           "name": "email",
@@ -46,27 +49,22 @@
           "label": "Expected volume",
           "type": "select",
           "options": [
-            {
-              "value": "small",
-              "label": "Under 50"
-            },
-            {
-              "value": "large",
-              "label": "50 or more"
-            }
+            { "value": "small", "label": "Under 50" },
+            { "value": "large", "label": "50 or more" }
           ]
         },
         {
           "name": "detail",
           "label": "Tell us more",
           "type": "textarea",
-          "showWhen": {
-            "field": "volume",
-            "is": "equal",
-            "value": "large"
-          }
+          "showWhen": { "field": "volume", "is": "equal", "value": "large" }
         }
-      ]
+      ],
+      "site": {
+        "submitLabel": "Send enquiry",
+        "spamProtection": "honeypot",
+        "retentionDays": 0
+      }
     }
   ]
 }

@@ -309,17 +309,20 @@ collections:
   # renders it because that panel mirrors this same config.
   # ---------------------------------------------------------------------------
   - name: "project"
-    label: "Forms & project"
+    label: "Dynamic Configuration"
+    # The other half of the node's forms table. Saving here applies the
+    # declaration to the node; saving a form there writes back to this file.
+    sync: "forms"
     # The site's sign-up form is markup baked into index.html; no page reads
     # this file at render time. Previewing the site here would suggest editing
     # it changes that page, so the panel previews the forms themselves.
     preview: "forms"
     files:
       - name: "admin-cms"
-        label: "Forms & project"
+        label: "Dynamic Configuration"
         file: "admin-cms.json"
         fields:
-          # Carried through untouched so saving does not strip it.
+          # Carried through untouched so saving does not strip them.
           - { name: "$schema", label: "Schema", widget: "hidden", required: false }
           - { name: "version", label: "Config version", widget: "hidden", required: false }
 
@@ -333,10 +336,17 @@ collections:
           - name: "forms"
             label: "Forms"
             widget: "list"
-            hint: "Each form here is one form your node will serve."
+            hint: "Each form here is one form your node serves. Saving applies it to the node."
             fields:
-              - { name: "slug", label: "Slug", widget: "string", mono: true, hint: "Used in the form's URL. Changing it breaks existing links." }
+              - { name: "slug", label: "Slug", widget: "string", mono: true, hint: "Addresses the form in the API. Changing it breaks existing links." }
               - { name: "name", label: "Name", widget: "string" }
+              - name: "status"
+                label: "Status"
+                widget: "select"
+                required: false
+                options: ["published", "draft", "paused"]
+                hint: "Draft is invisible to the public API; paused answers 410."
+              - { name: "successMessage", label: "Message after submitting", widget: "string", required: false }
 
               - name: "fields"
                 label: "Fields"
@@ -379,12 +389,12 @@ collections:
                         options: ["equal", "not_equal", "filled", "empty"]
                       - { name: "value", label: "Value", widget: "string", required: false }
 
-              - name: "settings"
-                label: "Settings"
+              - name: "site"
+                label: "On the site"
                 widget: "object"
                 required: false
+                hint: "Presentation the node has no column for. Carried through untouched."
                 fields:
-                  - { name: "confirmationMessage", label: "Confirmation message", widget: "string", required: false }
                   - { name: "submitLabel", label: "Submit button label", widget: "string", required: false }
                   - name: "spamProtection"
                     label: "Spam protection"
