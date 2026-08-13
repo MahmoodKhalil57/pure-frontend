@@ -709,18 +709,34 @@ html.js .lot:not(.is-revealed) {
   display: none;
 }
 
+/* The slit. Vertical between two columns, and simply turned when they stack —
+   the same cut, read the same way. */
+.account__pair::before {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-start: calc(50% - 0.5px);
+  height: 1px;
+  content: "";
+  background: linear-gradient(
+    to right,
+    transparent,
+    color-mix(in srgb, var(--ahar) 22%, transparent) 18%,
+    color-mix(in srgb, var(--ahar) 22%, transparent) 82%,
+    transparent
+  );
+}
+
 @media (min-width: 48rem) {
   .account__pair {
     grid-template-columns: 1fr 1fr;
   }
 
-  /* The slit. */
   .account__pair::before {
-    position: absolute;
     inset-block: 1.75rem;
+    inset-inline: auto;
     inset-inline-start: 50%;
     width: 1px;
-    content: "";
+    height: auto;
     background: linear-gradient(
       to bottom,
       transparent,
