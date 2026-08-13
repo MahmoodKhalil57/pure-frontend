@@ -39,6 +39,20 @@
       "binding": {
         "type": "account"
       }
+    },
+    {
+      "id": "site-header",
+      "name": "Site header",
+      "binding": {
+        "type": "none"
+      }
+    },
+    {
+      "id": "site-footer",
+      "name": "Site footer",
+      "binding": {
+        "type": "none"
+      }
     }
   ]
 }
