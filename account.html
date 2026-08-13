@@ -15,9 +15,9 @@
     <!-- ?v= is a cache buster. GitHub Pages serves these with max-age=14400,
          so without it a stylesheet change takes up to four hours to reach
          anyone who has already visited. Bump it when the assets change. -->
-    <link rel="stylesheet" href="assets/css/styles.css?v=3" />
+    <link rel="stylesheet" href="assets/css/styles.css?v=4" />
     <!-- Styles authored in the visual builder land here; styles.css stays hand-written. -->
-    <link rel="stylesheet" href="assets/css/page.css?v=3" />
+    <link rel="stylesheet" href="assets/css/page.css?v=4" />
   </head>
 
   <body>
@@ -50,8 +50,8 @@
       <section data-symbol="account-forms" class="account">
         <header class="section-head">
           <p class="eyebrow">Your account</p>
-          <h1 class="section-head__title">Sign in</h1>
-          <p class="section-head__blurb">
+          <h1 class="section-head__title" data-account-heading>Sign in</h1>
+          <p class="section-head__blurb" data-account-when="out">
             An account keeps your place on the list and your past orders in one
             place. It is not needed to send the opening-notice form.
           </p>
@@ -59,7 +59,7 @@
 
         <p class="account__status" data-account-status hidden></p>
 
-        <div class="account__card account__signed-in" data-account-signed-in hidden>
+        <div class="account__card account__signed-in" data-account-when="in" hidden>
           <p class="account__who">
             Signed in as <strong data-account-name></strong>.
           </p>
@@ -72,7 +72,7 @@
           </button>
         </div>
 
-        <div class="account__pair" data-account-signed-out>
+        <div class="account__pair" data-account-when="out">
           <div class="account__card">
             <p class="account__title">New here</p>
             <form data-account="sign-up" novalidate onsubmit="return false">
@@ -166,7 +166,7 @@
       </ul>
     </footer>
 
-    <script src="assets/js/render.js?v=3"></script>
-    <script src="assets/js/main.js?v=3"></script>
+    <script src="assets/js/render.js?v=4"></script>
+    <script src="assets/js/main.js?v=4"></script>
   </body>
 </html>
