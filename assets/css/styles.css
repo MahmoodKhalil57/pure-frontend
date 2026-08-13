@@ -671,3 +671,89 @@ html.js .lot:not(.is-revealed) {
     transition: none;
   }
 }
+
+/* --- account ---------------------------------------------------------------
+   The sign-in page's own layout. Hand-written here rather than in page.css,
+   which the visual builder rewrites on every save.
+
+   `.notify__input` carries `flex: 1 1 15rem` so it can share a line in the
+   notify row; stacked in a column that same rule makes it grow to fill the
+   height, which is why the growth is switched off below. */
+
+.account {
+  max-width: 52rem;
+  margin: 0 auto;
+  padding: 4rem 1.25rem 6rem;
+}
+
+.account__pair {
+  display: grid;
+  gap: 1.5rem;
+}
+
+/* An explicit `display` beats the `hidden` attribute, so signing in would
+   otherwise leave the forms sitting under the welcome. */
+.account__pair[hidden] {
+  display: none;
+}
+
+@media (min-width: 46rem) {
+  .account__pair {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.account__card {
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid color-mix(in srgb, var(--ahar) 14%, transparent);
+  border-radius: 3px;
+}
+
+.account__pair .account__card {
+  margin-bottom: 0;
+}
+
+.account__title {
+  margin: 0 0 1rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.account__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 0.9rem;
+}
+
+.account__field .notify__input {
+  flex: 0 0 auto;
+  width: 100%;
+}
+
+.account__field label {
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ahar-dim);
+}
+
+.account__status {
+  margin: 0.75rem 0 0;
+  font-size: 0.85rem;
+  color: var(--ahar-dim);
+}
+
+.account__status[hidden] {
+  display: none;
+}
+
+.account__status[data-error] {
+  color: #ff9d80;
+}
+
+.account__note {
+  font-size: 0.85rem;
+  color: var(--ahar-dim);
+}
