@@ -382,6 +382,44 @@ a {
   border-color: var(--verdigris);
 }
 
+/* A form whose questions arrive from the node, so their number is not known
+   here. Stacked rather than laid out in a row: a row is a design for one field
+   and a guess for any other count. */
+.notify--stacked {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;
+  max-width: 34rem;
+}
+
+.notify--stacked [data-form-fields] {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+}
+
+.notify--stacked .notify__input {
+  width: 100%;
+}
+
+.notify--stacked textarea.notify__input {
+  min-height: 8rem;
+  resize: vertical;
+}
+
+/* A value the bench already holds, shown so it can be read rather than typed.
+   Drawn flat and unlit: it is a statement of fact, not somewhere to put a
+   cursor, and it should not look like one that has been switched off. */
+.notify__input--locked {
+  color: var(--ahar-dim);
+  background: color-mix(in srgb, var(--ahar) 5%, transparent);
+  border-style: dashed;
+  cursor: default;
+  opacity: 1;
+}
+
 .notify__note {
   margin: 0.75rem 0 0;
   font-size: var(--step--1);

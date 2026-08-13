@@ -92,6 +92,7 @@
           return {};
         })
         .then(function (parsed) {
+          heldForDetails(parsed);
           return { ok: response.ok, body: parsed };
         });
     });
@@ -148,9 +149,25 @@
     return out;
   }
 
+  /* The node refuses everything an account with unfinished details asks for,
+     and says so with one code. Wherever that arrives, the answer is the same
+     page — the one with the questions on it — so it is handled once, here,
+     rather than at each call site that might be the first to hit it.
+
+     The account page itself is exempt, or landing there to answer the questions
+     would bounce straight back to it. */
+  function heldForDetails(body) {
+    if (!body || body.code !== "profile_incomplete") return false;
+    var here = location.pathname.replace(/\/+$/, "");
+    if (/\/account$/.test(here) || /\/account\.html$/.test(here)) return false;
+    location.assign("account");
+    return true;
+  }
+
   function getJson(url) {
     return fetch(url, { credentials: "include" }).then(function (response) {
       return response.json().then(function (body) {
+        heldForDetails(body);
         return { ok: response.ok, body: body };
       });
     });
@@ -194,6 +211,18 @@
     input.className = "notify__input";
     if (field.placeholder) input.placeholder = field.placeholder;
     if (value !== undefined && value !== null) input.value = value;
+
+    /* A field the node answers itself, shown so it can be checked rather than
+       asked for. Disabled rather than readonly so nothing is posted under this
+       name at all — the node substitutes it either way, and sending a value it
+       intends to discard only invites the question of whether it does. */
+    if (field.readOnly) {
+      input.value = field.value || input.value;
+      input.disabled = true;
+      input.className += " notify__input--locked";
+      wrap.className += " account__field--locked";
+    }
+
     wrap.appendChild(input);
     return wrap;
   }
@@ -251,6 +280,7 @@
             event.preventDefault();
             var values = {};
             form.fields.forEach(function (field) {
+              if (field.readOnly) return;
               var input = section.querySelector('[name="' + field.name + '"]');
               if (input) values[field.name] = input.value;
             });
@@ -600,8 +630,53 @@
     applyProfile(root.replace(/\/api$/, ""));
   }
 
+  /* --- forms the node draws -------------------------------------------------
+     A form marked `data-form-fields` has no fields in the markup. It asks the
+     node what to show and draws that, which is what lets one contact form ask a
+     stranger for their address and a member for nothing: the decision is the
+     node's, taken from the session, and the page has no rule of its own to get
+     wrong. A designer changes the questions in the panel and this follows. */
+
+  function renderFormFields(content, form) {
+    var root = apiRoot(content);
+    var slug = form.dataset.form || (get(content, "site.backend") || {}).form;
+    if (!root || !slug) return;
+
+    var host = form.querySelector("[data-form-fields]") || form;
+    var status = form.querySelector(".notify__status");
+
+    getJson(root + "/public/forms/" + encodeURIComponent(slug))
+      .then(function (result) {
+        if (!result.ok) {
+          if (result.body && result.body.code === "sign_in_required") {
+            say(status, "Sign in to use this form.", "error");
+            form.hidden = true;
+          }
+          return;
+        }
+        var fields = (result.body && result.body.fields) || [];
+        host.replaceChildren();
+        fields.forEach(function (field) {
+          host.appendChild(profileField(field, field.value));
+        });
+        // Put back after the fields, so the button stays last in the tab order.
+        var button = form.querySelector("button[type='submit']");
+        if (button && host === form) form.appendChild(button);
+        form.dataset.rendered = "1";
+      })
+      .catch(function () {
+        /* leave whatever the markup already had — a form that cannot reach the
+           node is better as the plain one than as nothing */
+      });
+  }
+
   function applyForms(content) {
     var mailto = get(content, "site.contact.email");
+
+    document.querySelectorAll("[data-form-fields]").forEach(function (host) {
+      var form = host.closest("form");
+      if (form) renderFormFields(content, form);
+    });
 
     document.querySelectorAll("form[data-form], form.notify").forEach(function (form) {
       var action = submitEndpoint(content, form);
@@ -609,13 +684,26 @@
       form.addEventListener("submit", function (event) {
         event.preventDefault();
 
-        var input = form.querySelector('input[type="email"]');
         var status = form.querySelector(".notify__status");
-        var email = input.value.trim();
+        // Absent on a form the node fills the address into, which is the point
+        // of this whole mechanism — so its absence is a shape, not a fault.
+        var input = form.querySelector('input[type="email"]:not([disabled])');
+        var email = input ? input.value.trim() : "";
 
-        if (!input.checkValidity() || !email) {
+        if (input && (!input.checkValidity() || !email)) {
           say(status, "That email address is not complete. Check it and try again.", "error");
           input.focus();
+          return;
+        }
+
+        // Whatever else the node draws, it still has to be filled in.
+        var blank = null;
+        form.querySelectorAll("[required]:not([disabled])").forEach(function (node) {
+          if (!blank && !String(node.value || "").trim()) blank = node;
+        });
+        if (blank) {
+          say(status, "Something above is still empty.", "error");
+          blank.focus();
           return;
         }
 
@@ -647,6 +735,10 @@
         fetch(action, {
           method: "POST",
           headers: { Accept: "application/json" },
+          // So the node recognises a signed-in sender and can answer the fields
+          // it said it would. A stranger sends no cookie and gets the form they
+          // were shown, which is the same request either way.
+          credentials: "include",
           body: new FormData(form),
         })
           .then(function (res) {
