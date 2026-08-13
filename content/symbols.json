@@ -32,6 +32,13 @@
         "type": "none"
       },
       "source": "questions.items"
+    },
+    {
+      "id": "account-forms",
+      "name": "Account forms",
+      "binding": {
+        "type": "account"
+      }
     }
   ]
 }
