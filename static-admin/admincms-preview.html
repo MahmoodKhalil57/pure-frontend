@@ -13,6 +13,16 @@
     content through the site's own renderer. A preview that uses a second
     renderer is a preview of the second renderer.
 
+    It shows the part of the page the entry is responsible for, not the whole
+    page. Editing one FAQ answer and being handed the entire site means hunting
+    for the change; the panel can ask for the full page when that is what is
+    wanted.
+
+    Scope is read from the markup rather than configured, because the markup
+    already says who owns what: a section carries data-symbol="<id>", and a
+    symbol names the content file it reads. Nothing here needs to be kept in
+    step with the config by hand.
+
     This is a plain page rather than a CMS plugin, so the panel can host it in
     an iframe and post drafts to it. It reads nothing and writes nothing — it
     only paints what it is given.
@@ -31,6 +41,10 @@
       background: #111; color: #fff; z-index: 9999;
     }
     .preview-status[hidden] { display: none; }
+    /* A scoped fragment is lifted out of the page, so it has no section
+       rhythm around it to breathe against. */
+    .preview-scoped > * { margin-block: 0; }
+    .preview-scoped { padding-block: 1rem; }
   </style>
 </head>
 <body>
@@ -51,6 +65,7 @@
     var committed = {};
     var ready = false;
     var pending = null;
+    var bodyHtml = "";
 
     function say(message) {
       if (!message) { status.hidden = true; return; }
@@ -88,24 +103,113 @@
       return content;
     }
 
+    function cssQuote(value) {
+      return String(value).replace(/["\\]/g, "\\$&");
+    }
+
+    function symbolSelector(names) {
+      return names.map(function (name) {
+        return '[data-symbol="' + cssQuote(name) + '"]';
+      }).join(",");
+    }
+
+    /* The block a binding belongs to, so a scope is a piece of page rather
+       than a stray paragraph. */
+    function blocksFor(nodes) {
+      var blocks = [];
+      Array.prototype.forEach.call(nodes, function (node) {
+        var block = node.closest("section, header, footer, aside, nav, article") || node;
+        if (blocks.indexOf(block) === -1) blocks.push(block);
+      });
+      // Drop anything already inside another match, so a section and its own
+      // heading are not both rendered.
+      return blocks.filter(function (block) {
+        return !blocks.some(function (other) {
+          return other !== block && other.contains(block);
+        });
+      });
+    }
+
+    /**
+     * Which part of the page this entry is responsible for.
+     *
+     * Returns null when the entry owns no particular part, in which case the
+     * whole page is the honest answer.
+     */
+    function scopeFor(root, draft, content) {
+      if (!draft || !draft.collection) return null;
+      var collection = draft.collection;
+      var id = draft.id;
+
+      // A symbol is drawn on the page under its own id.
+      if (collection === "symbols" && id) {
+        var drawn = root.querySelectorAll(symbolSelector([id]));
+        if (drawn.length) return Array.prototype.slice.call(drawn);
+      }
+
+      // A content file is drawn by whichever symbols read it: a symbol names
+      // its file in `source`, e.g. "catalog.items".
+      if (collection === "content" && id) {
+        var readers = [];
+        var entries = content.symbolEntries || {};
+        Object.keys(entries).forEach(function (key) {
+          var source = entries[key] && entries[key].source;
+          if (source && String(source).split(".")[0] === id) readers.push(key);
+        });
+        if (readers.length) {
+          var sections = root.querySelectorAll(symbolSelector(readers));
+          if (sections.length) return Array.prototype.slice.call(sections);
+        }
+      }
+
+      // Anything else is found through what it binds: site settings light up
+      // the banner and the colophon, pages light up the nav.
+      var prefix = collection === "settings" ? (id || "site") : collection;
+      var bound = root.querySelectorAll(
+        '[data-text^="' + cssQuote(prefix) + '."],' +
+        '[data-when^="' + cssQuote(prefix) + '."],' +
+        '[data-list^="' + cssQuote(prefix) + '."]'
+      );
+      if (bound.length) return blocksFor(bound);
+
+      return null;
+    }
+
     function paint(draft) {
       if (!ready) { pending = draft; return; }
       if (!window.PureRender) { say("Renderer missing."); return; }
 
-      surface.innerHTML = bodyHtml;
+      var content = merge(draft);
+
+      // Bind the whole page first: a symbol's list looks up its own host with
+      // closest("[data-symbol]"), so binding a detached fragment on its own
+      // would leave those lists unrendered.
+      var page = document.createElement("div");
+      page.innerHTML = bodyHtml;
+
       try {
-        window.PureRender.bindAll(surface, merge(draft), {
+        window.PureRender.bindAll(page, content, {
           asset: function (path) {
             return path ? new URL(path, SITE_BASE).href : path;
           },
         });
-        say(null);
       } catch (error) {
         say("Could not render: " + error.message);
+        return;
       }
-    }
 
-    var bodyHtml = "";
+      var scope = draft && draft.mode === "page" ? null : scopeFor(page, draft, content);
+
+      surface.innerHTML = "";
+      if (scope && scope.length) {
+        surface.className = "preview-scoped";
+        scope.forEach(function (node) { surface.appendChild(node); });
+      } else {
+        surface.className = "";
+        while (page.firstChild) surface.appendChild(page.firstChild);
+      }
+      say(null);
+    }
 
     Promise.all([
       fetch(new URL("index.html", SITE_BASE).href, { cache: "no-cache" })
