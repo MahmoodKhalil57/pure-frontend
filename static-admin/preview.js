@@ -16,7 +16,7 @@
    The component only records the latest request and schedules a paint with
    setTimeout(0), which lands after React has committed.
 
-   Loaded by admin/index.html after sveltia-cms.js and ../assets/js/render.js.
+   Loaded by static-admin/index.html after sveltia-cms.js and ../assets/js/render.js.
    =========================================================================== */
 
 (function () {

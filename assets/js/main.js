@@ -2,7 +2,7 @@
    Qalam & Ahar — runtime enhancement
    No build step, and nothing here is load-bearing for reading the page: the
    words and the catalog are baked into index.html (by hand or by the visual
-   builder in /admin/builder.html). This script only
+   builder in /static-admin/builder.html). This script only
      1. refreshes the data-driven lists and the announcement bar from
         /content/*.json, so a CMS edit shows up without re-saving the page,
      2. wires the sign-up form,

@@ -48,7 +48,7 @@
   var FONTS_URL =
     "https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400..700&display=swap";
   var PAGE_CSS_HEADER =
-    "/* Written by the visual builder (admin/builder.html).\n" +
+    "/* Written by the visual builder (static-admin/builder.html).\n" +
     "   Hand edits here are overwritten on the next builder save — put\n" +
     "   hand-written styles in styles.css instead. */\n";
 
@@ -203,7 +203,7 @@
   }
 
   function loadConfig() {
-    return siteFetch("admin/config.yml")
+    return siteFetch("static-admin/config.yml")
       .then(function (res) {
         return res.ok ? res.text() : "";
       })
@@ -1261,7 +1261,7 @@
     ui.makeSymbol.addEventListener("click", makeSymbol);
     ui.pageSelect.addEventListener("change", switchPage);
 
-    // Inside the dashboard (admin/index.html embeds this page via shell.js),
+    // Inside the dashboard (static-admin/index.html embeds this page via shell.js),
     // offer the way back. The dashboard removes the overlay on this message.
     if (window.self !== window.top) {
       var back = document.createElement("button");

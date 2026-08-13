@@ -4,7 +4,7 @@
 # CHANGE THIS FIRST: `repo` must be the GitHub repository this site is
 # committed to, in owner/name form. Everything else works as-is.
 #
-# The split between this CMS and the visual builder (/admin/builder.html):
+# The split between this CMS and the visual builder (/static-admin/builder.html):
 # the CMS edits DATA — lists and settings that render the same way every
 # time (catalog items, steps, questions, links, the announcement). The words
 # and layout of the page itself are edited visually in the builder, which

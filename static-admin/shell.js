@@ -2,7 +2,7 @@
    Qalam & Ahar — one dashboard
    Sveltia is the dashboard; the page builder lives inside it. This script
    injects a "Page" item at the top of Sveltia's collection sidebar which
-   opens admin/builder.html as a full-viewport overlay — same sign-in (the
+   opens static-admin/builder.html as a full-viewport overlay — same sign-in (the
    token is shared), no second surface to know about. Closing the overlay
    returns to Sveltia exactly where you were.
 

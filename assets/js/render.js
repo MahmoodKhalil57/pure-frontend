@@ -2,7 +2,7 @@
    Qalam & Ahar — shared content renderers
    One copy of the JSON -> HTML logic, used from two places:
      - assets/js/main.js   re-renders live in the visitor's browser
-     - admin/builder.js    bakes the same markup into index.html at save time,
+     - static-admin/builder.js    bakes the same markup into index.html at save time,
                            so the page is complete without JavaScript
    No build step; this file defines window.PureRender and nothing else.
    =========================================================================== */

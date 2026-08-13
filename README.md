@@ -1,13 +1,23 @@
 # pure-frontend
 
+> **Two different admin surfaces, deliberately.**
+>
+> - `/static-admin/` — this repo's own editors. Sveltia CMS edits the content
+>   JSON and GrapesJS edits the page; both commit straight back to git, so the
+>   site stays a no-build static site.
+> - `/admin` — your adminCms node's panel: forms, submissions, features and
+>   settings. It is not part of this repo; it is served by the node on the same
+>   hostname once your custom domain is set up.
+
+
 A landing page for a shop that has not opened yet. Pure HTML and CSS — no build
 step, no dependencies to install, and the page reads complete with JavaScript
 turned off. JS only adds motion and live niceties. Two editors commit straight
 back to this repository, and a commit on `master` is a deploy:
 
-- **[Sveltia CMS](https://sveltiacms.app/)** (`/admin/`) edits _data_: catalog
+- **[Sveltia CMS](https://sveltiacms.app/)** (`/static-admin/`) edits _data_: catalog
   items, craft steps, questions, footer links, the announcement bar, settings.
-- **The visual builder** (`/admin/builder.html`,
+- **The visual builder** (`/static-admin/builder.html`,
   [GrapesJS](https://grapesjs.com/)) edits _the page itself_ — words, layout,
   cosmetics — and exports plain HTML and CSS.
 
@@ -32,12 +42,12 @@ content/site.json           announcement, contact, backend -> CMS "Settings"
 content/landing.json        steps, FAQ, form behaviour     -> CMS "Landing page"
 content/catalog.json        the Lot One grid               -> CMS "Catalog"
 media/uploads/              images uploaded through the CMS
-admin/index.html            loads Sveltia CMS from a CDN — the dashboard
-admin/config.yml            the content model
-admin/builder.html          loads GrapesJS from a CDN
-admin/builder.js            the whole builder integration
-admin/preview.js            live preview inside the CMS
-admin/shell.js              puts the builder inside the dashboard
+static-admin/index.html            loads Sveltia CMS from a CDN — the dashboard
+static-admin/config.yml            the content model
+static-admin/builder.html          loads GrapesJS from a CDN
+static-admin/builder.js            the whole builder integration
+static-admin/preview.js            live preview inside the CMS
+static-admin/shell.js              puts the builder inside the dashboard
 .nojekyll                   tells GitHub Pages to serve the files as-is
 ```
 
@@ -77,12 +87,12 @@ And the builder **draws and places**: page bodies, symbol bodies (declared
 symbols appear as stubs to fill in), instances from the "Reusable" block
 category. Editing a symbol updates every instance on every page.
 
-- **GrapesJS** (`/admin/builder.html`) is for visual building — the singular:
+- **GrapesJS** (`/static-admin/builder.html`) is for visual building — the singular:
   layout, structure, cosmetics, one-off copy. It builds pages out of blocks,
   and it builds the blocks themselves: select anything in the canvas, hit
   **Save block**, and it joins the block panel for reuse. The library lives in
   `content/blocks.grapes.json`, committed with the page.
-- **Sveltia** (`/admin/`) is for what must be standardized: anything that
+- **Sveltia** (`/static-admin/`) is for what must be standardized: anything that
   exists N times with one shape (catalog items, steps, questions, links), and
   anything that configures behaviour (form endpoint, announcement, contact).
   Repetition needs a schema, and a schema needs a form — that is Sveltia.
@@ -102,7 +112,7 @@ A saved block is a stamp: dropped copies diverge, which is right for "start
 from this pattern." A symbol is a reference: edit once, updated everywhere,
 and bindable to the backend. When a symbol's instances keep wanting different
 content in the same shape, it has outgrown being a symbol — add its fields to
-`admin/config.yml`, give its container a `data-list`, teach `render.js` the
+`static-admin/config.yml`, give its container a `data-list`, teach `render.js` the
 item shape, and count it in the CMS from then on.
 
 One sign-in covers both: each tool stores the GitHub token where the other
@@ -112,7 +122,7 @@ can push to the repository can do both — that is the entire permission model.
 ## Setup, once
 
 1. **Push this directory to a GitHub repository** with `master` as the default branch.
-2. **Point `admin/config.yml` at that repository.** Change `backend.repo` to
+2. **Point `static-admin/config.yml` at that repository.** Change `backend.repo` to
    `owner/name`, and `site_url` / `display_url` to the Pages URL. Nothing else
    needs touching.
 3. **Turn on Pages.** Repository → Settings → Pages → Source: *Deploy from a
@@ -121,7 +131,7 @@ can push to the repository can do both — that is the entire permission model.
 
 ## Editing content
 
-Open `https://<owner>.github.io/<repo>/admin/` and choose **Sign in with token**.
+Open `https://<owner>.github.io/<repo>/static-admin/` and choose **Sign in with token**.
 
 The dialog links to GitHub's token page with the right scopes pre-selected. Create
 a fine-grained or classic token with `repo` access, paste it back, and you are in.
@@ -135,7 +145,7 @@ editors later, deploy
 Worker, then add `base_url` to the backend block and put `oauth` back into
 `auth_methods`.
 
-The preview pane shows the real page, not an abstract field list: `admin/preview.js`
+The preview pane shows the real page, not an abstract field list: `static-admin/preview.js`
 registers a preview template per file that injects `index.html` into Sveltia's
 preview iframe and re-runs the site's own renderers (`render.js`) on every
 keystroke — draft values for the file being edited, committed content for the
@@ -145,9 +155,9 @@ Saving in the CMS commits to `master`, which redeploys the site. Give it a minut
 
 ## Editing the page visually
 
-Open the dashboard (`/admin/`) and pick **Builder** at the top of the sidebar —
+Open the dashboard (`/static-admin/`) and pick **Builder** at the top of the sidebar —
 the builder opens inside the dashboard, on the same sign-in, and **‹ Content**
-brings you back to where you were. (`/admin/builder.html` also works directly;
+brings you back to where you were. (`/static-admin/builder.html` also works directly;
 it is the same tool.)
 
 The builder is [GrapesJS](https://grapesjs.com/) pinned from a CDN, editing the
@@ -171,7 +181,7 @@ content/blocks.grapes.json  saved starter blocks, if any
 If you have signed in to the CMS in this browser, the builder picks up the
 same GitHub token automatically — no second sign-in. Otherwise **Connect
 GitHub** asks for a personal access token (stored in this browser only, and
-shared back to the CMS), reads the repository from `admin/config.yml`, and
+shared back to the CMS), reads the repository from `static-admin/config.yml`, and
 commits straight to `master`. In a Chromium browser, **Work with local
 folder** writes the files to disk instead — pair it with `bunx serve .` and
 commit when it looks right.
@@ -192,10 +202,10 @@ and the `<head>` stays yours to edit directly.
 bunx serve .          # or: python3 -m http.server 8000
 ```
 
-Open `http://localhost:8000/`. Open `http://localhost:8000/admin/` and Sveltia
+Open `http://localhost:8000/`. Open `http://localhost:8000/static-admin/` and Sveltia
 offers **Work with Local Repository** — it edits the files on disk through the File
 System Access API (Chromium browsers), no token and no commits until you push. The
-visual builder does the same at `http://localhost:8000/admin/builder.html` via
+visual builder does the same at `http://localhost:8000/static-admin/builder.html` via
 **Work with local folder**.
 
 ## This repository is public
@@ -234,8 +244,8 @@ writes an index file on each commit.
 
 ## Pinned version
 
-`admin/index.html` pins Sveltia CMS to `0.187.0` rather than tracking latest, so a
+`static-admin/index.html` pins Sveltia CMS to `0.187.0` rather than tracking latest, so a
 CDN release can never change the editor without you choosing it. Sveltia logs a
 console warning when a newer version ships; bump the one line to take it.
-`admin/builder.html` pins GrapesJS to `0.23.5` for the same reason — two lines
+`static-admin/builder.html` pins GrapesJS to `0.23.5` for the same reason — two lines
 there (the script and its stylesheet) to bump together.
