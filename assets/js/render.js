@@ -73,7 +73,11 @@
 
     items.forEach(function (page) {
       var a = el(doc, "a", null, page.nav_label);
-      a.setAttribute("href", page.slug === "index" ? "./" : page.slug + ".html");
+      // Extensionless: GitHub Pages serves account.html for /account, so the
+      // file on disk keeps its extension and the address people see does not.
+      // Relative rather than root-relative, because the same site is served
+      // from a subpath on github.io before a custom domain is attached.
+      a.setAttribute("href", page.slug === "index" ? "./" : page.slug);
       container.appendChild(a);
     });
   }
