@@ -107,6 +107,55 @@
     return { needs: read("page-access"), to: read("page-redirect") };
   }
 
+  /* --- passkeys -------------------------------------------------------------
+     WebAuthn moves binary in and out of the browser, and the server speaks
+     base64url, so the two conversions below are the whole adapter. Written out
+     rather than pulled from a library: it is thirty lines, and a sign-in page
+     is the last place to add a dependency loaded from someone else's CDN. */
+
+  function fromB64(value) {
+    var padded = String(value).replace(/-/g, "+").replace(/_/g, "/");
+    var raw = atob(padded + "=".repeat((4 - (padded.length % 4)) % 4));
+    return Uint8Array.from(raw, function (c) {
+      return c.charCodeAt(0);
+    });
+  }
+
+  function toB64(buffer) {
+    var bytes = new Uint8Array(buffer);
+    var out = "";
+    for (var i = 0; i < bytes.length; i += 1) out += String.fromCharCode(bytes[i]);
+    return btoa(out).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  }
+
+  function credentialJson(credential) {
+    var r = credential.response;
+    var out = {
+      id: credential.id,
+      rawId: toB64(credential.rawId),
+      type: credential.type,
+      clientExtensionResults: credential.getClientExtensionResults(),
+      response: { clientDataJSON: toB64(r.clientDataJSON) },
+    };
+    if (r.attestationObject) {
+      out.response.attestationObject = toB64(r.attestationObject);
+      if (r.getTransports) out.response.transports = r.getTransports();
+    } else {
+      out.response.authenticatorData = toB64(r.authenticatorData);
+      out.response.signature = toB64(r.signature);
+      out.response.userHandle = r.userHandle ? toB64(r.userHandle) : undefined;
+    }
+    return out;
+  }
+
+  function getJson(url) {
+    return fetch(url, { credentials: "include" }).then(function (response) {
+      return response.json().then(function (body) {
+        return { ok: response.ok, body: body };
+      });
+    });
+  }
+
   function applyAccounts(content) {
     var root = apiRoot(content);
     // The whole document, not one symbol: the masthead has a sign-out on some
@@ -246,6 +295,104 @@
         });
       }
     });
+
+    /* Registering one. Only offered to someone already signed in, because a
+       passkey is a second way into an account that has to exist first. */
+    var add = scope.querySelector("[data-passkey-add]");
+    if (add) {
+      var addNote = scope.querySelector("[data-passkey-note]");
+      if (!window.PublicKeyCredential) {
+        add.hidden = true;
+      } else {
+        add.addEventListener("click", function () {
+          say(addNote, "Ask your device to make one…");
+          getJson(root + "/auth/passkey/generate-register-options")
+            .then(function (result) {
+              if (!result.ok) throw new Error("options");
+              var options = result.body;
+              options.challenge = fromB64(options.challenge);
+              options.user.id = fromB64(options.user.id);
+              (options.excludeCredentials || []).forEach(function (entry) {
+                entry.id = fromB64(entry.id);
+              });
+              return navigator.credentials.create({ publicKey: options });
+            })
+            .then(function (credential) {
+              return post(
+                root + "/auth/passkey/verify-registration",
+                credentialJson(credential),
+              );
+            })
+            .then(function (result) {
+              say(
+                addNote,
+                result.ok
+                  ? "Done. You can use this device to sign in from now on."
+                  : "That did not save. Try again.",
+                !result.ok,
+              );
+            })
+            .catch(function (error) {
+              // A refusal is the visitor changing their mind, not a fault.
+              say(
+                addNote,
+                error && error.name === "NotAllowedError"
+                  ? ""
+                  : "This device could not make a passkey.",
+                true,
+              );
+            });
+        });
+      }
+    }
+
+    /* Using one. No address typed: the device knows which accounts it holds
+       for this site, which is the entire appeal. */
+    var use = scope.querySelector("[data-passkey-use]");
+    if (use) {
+      var useNote = scope.querySelector("[data-passkey-note]") ||
+        scope.querySelector("[data-account-note]");
+      if (!window.PublicKeyCredential) {
+        use.hidden = true;
+      } else {
+        use.addEventListener("click", function () {
+          say(useNote, "Ask your device…");
+          getJson(root + "/auth/passkey/generate-authenticate-options")
+            .then(function (result) {
+              if (!result.ok) throw new Error("options");
+              var options = result.body;
+              options.challenge = fromB64(options.challenge);
+              (options.allowCredentials || []).forEach(function (entry) {
+                entry.id = fromB64(entry.id);
+              });
+              return navigator.credentials.get({ publicKey: options });
+            })
+            .then(function (credential) {
+              return post(
+                root + "/auth/passkey/verify-authentication",
+                credentialJson(credential),
+              );
+            })
+            .then(function (result) {
+              if (!result.ok) {
+                say(useNote, "That passkey was not recognised here.", true);
+                return;
+              }
+              say(useNote, "");
+              refresh();
+            })
+            .catch(function (error) {
+              say(
+                useNote,
+                error && error.name === "NotAllowedError"
+                  ? ""
+                  : "No passkey was offered for this site.",
+                true,
+              );
+            });
+        });
+      }
+    }
 
     var out = scope.querySelector("[data-account-sign-out]");
     if (out) {
