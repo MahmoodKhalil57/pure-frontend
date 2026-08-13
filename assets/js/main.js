@@ -173,67 +173,79 @@
         .then(paint);
     }
 
-    var signUp = scope.querySelector('form[data-account="sign-up"]');
-    if (signUp) {
-      signUp.addEventListener("submit", function (event) {
-        event.preventDefault();
-        var note = signUp.querySelector("[data-account-note]");
-        var email = signUp.querySelector('[name="email"]').value;
-        var password = signUp.querySelector('[name="password"]').value;
-        var nameField = signUp.querySelector('[name="name"]');
-        say(note, "Creating your account…");
+    /* One flow for signing in and signing up, because with a code they are the
+       same act: an address we know gets in, one we do not gets an account at
+       the lowest role. The form asks for the address, then swaps to asking for
+       the code — no password anywhere, so there is none to lose. */
+    scope.querySelectorAll('form[data-account]').forEach(function (form) {
+      var note = form.querySelector("[data-account-note]");
+      var emailField = form.querySelector('[name="email"]');
+      var codeStep = form.querySelector("[data-account-step=\'code\']");
+      var askStep = form.querySelector("[data-account-step=\'email\']");
+      var codeField = form.querySelector('[name="otp"]');
 
-        post(root + "/public/signup", {
-          email: email,
-          password: password,
-          name: nameField ? nameField.value : "",
-        })
-          .then(function (result) {
-            if (!result.ok) {
-              say(note, result.body.error || "That did not work.", true);
-              return null;
-            }
-            // Straight on to the same endpoint an existing visitor uses, so
-            // there is one place that mints a session.
-            return post(root + "/auth/sign-in/email", {
-              email: email,
-              password: password,
+      function show(step) {
+        if (askStep) askStep.hidden = step !== "email";
+        if (codeStep) codeStep.hidden = step !== "code";
+        var focus = step === "code" ? codeField : emailField;
+        if (focus) focus.focus();
+      }
+
+      form.addEventListener("submit", function (event) {
+        event.preventDefault();
+        var email = (emailField && emailField.value.trim()) || "";
+        var code = (codeField && codeField.value.trim()) || "";
+
+        // Second leg: a code is present, so this is the verification.
+        if (code) {
+          say(note, "Checking your code…");
+          post(root + "/auth/sign-in/email-otp", { email: email, otp: code })
+            .then(function (result) {
+              if (!result.ok) {
+                say(note, "That code did not match. Ask for another if it has expired.", true);
+                return;
+              }
+              say(note, "");
+              refresh();
+            })
+            .catch(function () {
+              say(note, "Could not reach the server.", true);
             });
-          })
-          .then(function (result) {
-            if (!result) return;
-            say(note, result.ok ? "" : "Account created. Sign in below.");
-            if (result.ok) refresh();
-          })
-          .catch(function () {
-            say(note, "Could not reach the server.", true);
-          });
-      });
-    }
+          return;
+        }
 
-    var signIn = scope.querySelector('form[data-account="sign-in"]');
-    if (signIn) {
-      signIn.addEventListener("submit", function (event) {
-        event.preventDefault();
-        var note = signIn.querySelector("[data-account-note]");
-        say(note, "Signing in…");
-        post(root + "/auth/sign-in/email", {
-          email: signIn.querySelector('[name="email"]').value,
-          password: signIn.querySelector('[name="password"]').value,
+        // First leg: ask for a code.
+        if (!email) {
+          say(note, "Enter the address to send the code to.", true);
+          return;
+        }
+        say(note, "Sending a code to " + email + "…");
+        post(root + "/auth/email-otp/send-verification-otp", {
+          email: email,
+          type: "sign-in",
         })
           .then(function (result) {
             if (!result.ok) {
-              say(note, "That email and password did not match.", true);
+              say(note, result.body.message || "Could not send a code.", true);
               return;
             }
-            say(note, "");
-            refresh();
+            show("code");
+            say(note, "Six digits are on their way to " + email + ".");
           })
           .catch(function () {
             say(note, "Could not reach the server.", true);
           });
       });
-    }
+
+      var again = form.querySelector("[data-account-restart]");
+      if (again) {
+        again.addEventListener("click", function () {
+          if (codeField) codeField.value = "";
+          show("email");
+          say(note, "");
+        });
+      }
+    });
 
     var out = scope.querySelector("[data-account-sign-out]");
     if (out) {
