@@ -103,9 +103,8 @@
     if (!scope || !root) return;
 
     var status = scope.querySelector("[data-account-status]");
-    var forms = scope.querySelector("[data-account-signed-out]");
-    var welcome = scope.querySelector("[data-account-signed-in]");
     var who = scope.querySelector("[data-account-name]");
+    var heading = scope.querySelector("[data-account-heading]");
 
     function say(node, message, isError) {
       if (!node) return;
@@ -115,11 +114,16 @@
       else node.removeAttribute("data-error");
     }
 
+    /* One attribute says which state a piece of the page belongs to, so the
+       heading, the blurb and the forms all answer to the same switch. */
     function paint(session) {
       var signedIn = Boolean(session && session.user);
-      if (forms) forms.hidden = signedIn;
-      if (welcome) welcome.hidden = !signedIn;
+      scope.querySelectorAll("[data-account-when]").forEach(function (node) {
+        node.hidden = node.dataset.accountWhen !== (signedIn ? "in" : "out");
+      });
       if (signedIn && who) who.textContent = session.user.name || session.user.email;
+      // The page is not "Sign in" once you are.
+      if (heading) heading.textContent = signedIn ? "Your account" : "Sign in";
     }
 
     function refresh() {
