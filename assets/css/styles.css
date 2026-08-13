@@ -824,7 +824,7 @@ html.js .lot:not(.is-revealed) {
 
 /* Signed in, the page is one quiet statement rather than two doors. The brass
    edge is the only place the accent lands. */
-.account__signed-in {
+.account__card[data-account-when="in"] {
   border-inline-start: 2px solid var(--brass);
 }
 
