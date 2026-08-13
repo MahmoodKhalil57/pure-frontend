@@ -15,9 +15,36 @@
     <!-- ?v= is a cache buster. GitHub Pages serves these with max-age=14400,
          so without it a stylesheet change takes up to four hours to reach
          anyone who has already visited. Bump it when the assets change. -->
-    <link rel="stylesheet" href="assets/css/styles.css?v=4" />
+    <link rel="stylesheet" href="assets/css/styles.css?v=5" />
     <!-- Styles authored in the visual builder land here; styles.css stays hand-written. -->
-    <link rel="stylesheet" href="assets/css/page.css?v=4" />
+    <link rel="stylesheet" href="assets/css/page.css?v=5" />
+
+    <!--
+      Runs before the body exists, which is the whole point: the page cannot
+      ask the server who you are without a round trip, and painting the
+      signed-out state first and correcting it afterwards is the flash.
+
+      So the browser keeps a hint from last time and this reads it
+      synchronously, before first paint. The hint is a display preference, not
+      a credential — it says which half of the page to draw, and every request
+      is still authorised by the session cookie on the server. Forging it gets
+      you a page that says your name and an API that refuses you.
+
+      With JavaScript off nothing runs, the default stands, and there is no
+      shift at all — the signed-out state is what a visitor without scripts can
+      use anyway.
+    -->
+    <script>
+      try {
+        var hint = localStorage.getItem("qa.account");
+        if (hint) {
+          document.documentElement.dataset.account = "in";
+          document.documentElement.dataset.accountName = hint;
+        }
+      } catch (error) {
+        /* private mode, or storage refused — the default stands */
+      }
+    </script>
   </head>
 
   <body>
@@ -59,7 +86,14 @@
 
         <p class="account__status" data-account-status hidden></p>
 
-        <div class="account__card account__signed-in" data-account-when="in" hidden>
+        <noscript>
+          <p class="account__note">
+            Signing in needs JavaScript. The opening-notice form on the home
+            page works without it.
+          </p>
+        </noscript>
+
+        <div class="account__card account__signed-in" data-account-when="in">
           <p class="account__who">
             Signed in as <strong data-account-name></strong>.
           </p>
@@ -166,7 +200,7 @@
       </ul>
     </footer>
 
-    <script src="assets/js/render.js?v=4"></script>
-    <script src="assets/js/main.js?v=4"></script>
+    <script src="assets/js/render.js?v=5"></script>
+    <script src="assets/js/main.js?v=5"></script>
   </body>
 </html>
