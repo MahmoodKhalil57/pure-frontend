@@ -24,14 +24,19 @@
       pages, and this one has behaviour.
     -->
     <style>
-      .account { max-width: 34rem; margin: 0 auto; padding: 4rem 1.25rem 6rem; }
-      .account__pair { display: grid; gap: 2.5rem; }
+      .account { max-width: 52rem; margin: 0 auto; padding: 4rem 1.25rem 6rem; }
+      .account__pair { display: grid; gap: 1.5rem; }
+      @media (min-width: 46rem) { .account__pair { grid-template-columns: 1fr 1fr; } }
       .account__card {
         padding: 1.5rem;
         border: 1px solid rgba(255, 255, 255, 0.12);
         border-radius: 14px;
       }
       .account__field { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 0.9rem; }
+      /* `.notify__input` is built for the inline sign-up row, where `flex: 1`
+         makes it share a line. Stacked in a column that same rule makes it
+         grow to fill the height, so the growth is switched off here. */
+      .account__field .notify__input { flex: 0 0 auto; width: 100%; }
       .account__field label { font-size: 0.8rem; letter-spacing: 0.04em; text-transform: uppercase; opacity: 0.7; }
       .account__status { margin: 0.75rem 0 0; font-size: 0.85rem; opacity: 0.8; }
       .account__status[hidden] { display: none; }
@@ -58,7 +63,7 @@
 
       <p class="account__status" id="account-status" hidden></p>
 
-      <section id="account-welcome" hidden class="account__card">
+      <section id="account-welcome" hidden class="account__card" style="margin-bottom:1.5rem">
         <p>
           Signed in as <strong id="account-name"></strong>.
         </p>
