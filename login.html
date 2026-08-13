@@ -14,9 +14,9 @@
       href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=Instrument+Sans:wght@400..700&amp;display=swap"
     />
     <!-- ?v= is a cache buster: GitHub Pages serves these with max-age=14400. -->
-    <link rel="stylesheet" href="assets/css/styles.css?v=9" />
+    <link rel="stylesheet" href="assets/css/styles.css?v=10" />
     <!-- Styles authored in the visual builder land here; styles.css stays hand-written. -->
-    <link rel="stylesheet" href="assets/css/page.css?v=9" />
+    <link rel="stylesheet" href="assets/css/page.css?v=10" />
 
     <!--
       Who this page is for, taken from its entry in the Pages collection and
@@ -95,20 +95,28 @@
           <p class="eyebrow">Your account</p>
           <h1 class="section-head__title">Sign in</h1>
           <p class="section-head__blurb">
-            No account yet? <a href="signup">Create one</a> — it takes a moment.
+            We email you a six-digit code. No password to remember, and none to lose.
+            New here? <a href="signup">Create an account</a>.
           </p>
         </header>
         <div class="account__card">
           <form data-account="sign-in" novalidate onsubmit="return false">
+            <div data-account-step="email">
               <div class="account__field">
-                <label for="signin-email">Email</label>
-                <input class="notify__input" id="signin-email" name="email" type="email" required autocomplete="email" placeholder="you@example.com" />
+                <label for="sign-in-email">Email</label>
+                <input class="notify__input" id="sign-in-email" name="email" type="email" required autocomplete="email" placeholder="you@example.com" />
               </div>
+              <button type="submit" class="btn btn--solid">Email me a code</button>
+            </div>
+
+            <div data-account-step="code" hidden>
               <div class="account__field">
-                <label for="signin-password">Password</label>
-                <input class="notify__input" id="signin-password" name="password" type="password" required autocomplete="current-password" />
+                <label for="sign-in-otp">Six-digit code</label>
+                <input class="notify__input account__code" id="sign-in-otp" name="otp" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000" />
               </div>
-            <button type="submit" class="btn btn--solid">Sign in</button>
+              <button type="submit" class="btn btn--solid">Sign in</button>
+              <button type="button" class="btn btn--ghost" data-account-restart>Use a different address</button>
+            </div>
             <p class="account__status" data-account-note hidden></p>
           </form>
         </div>
@@ -128,7 +136,7 @@
       </ul>
     </footer>
 
-    <script src="assets/js/render.js?v=9"></script>
-    <script src="assets/js/main.js?v=9"></script>
+    <script src="assets/js/render.js?v=10"></script>
+    <script src="assets/js/main.js?v=10"></script>
   </body>
 </html>
