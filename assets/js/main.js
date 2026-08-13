@@ -296,11 +296,81 @@
       }
     });
 
+    /* What is already registered. A page that offers to add a passkey and then
+       never mentions it again leaves someone unsure whether it worked, and
+       unable to take one away when they lose the device. */
+    var list = scope.querySelector("[data-passkey-list]");
+
+    function drawPasskeys() {
+      if (!list) return Promise.resolve();
+      return getJson(root + "/auth/passkey/list-user-passkeys")
+        .then(function (result) {
+          var keys = result.ok && Array.isArray(result.body) ? result.body : [];
+          list.replaceChildren();
+          list.hidden = false;
+
+          if (!keys.length) {
+            var none = document.createElement("p");
+            none.className = "account__note";
+            none.textContent = "No passkeys on this account yet.";
+            list.appendChild(none);
+            return;
+          }
+
+          keys.forEach(function (key) {
+            var row = document.createElement("div");
+            row.className = "passkey";
+
+            var text = document.createElement("div");
+            text.className = "passkey__text";
+            var name = document.createElement("p");
+            name.className = "passkey__name";
+            name.textContent = key.name || "Unnamed device";
+            var when = document.createElement("p");
+            when.className = "passkey__when";
+            when.textContent = key.createdAt
+              ? "Added " + new Date(key.createdAt).toLocaleDateString()
+              : "";
+            text.appendChild(name);
+            text.appendChild(when);
+
+            var remove = document.createElement("button");
+            remove.type = "button";
+            remove.className = "btn btn--ghost passkey__remove";
+            remove.textContent = "Remove";
+            remove.addEventListener("click", function () {
+              remove.disabled = true;
+              post(root + "/auth/passkey/delete-passkey", { id: key.id })
+                .then(function (res) {
+                  if (!res.ok) {
+                    remove.disabled = false;
+                    say(addNote, "That one could not be removed.", true);
+                    return;
+                  }
+                  // Only from here. The device keeps its own copy, which is
+                  // now a key to a lock that no longer exists.
+                  drawPasskeys();
+                })
+                .catch(function () {
+                  remove.disabled = false;
+                });
+            });
+
+            row.appendChild(text);
+            row.appendChild(remove);
+            list.appendChild(row);
+          });
+        })
+        .catch(function () {
+          /* signed out, or the account has none — the list simply stays empty */
+        });
+    }
+
     /* Registering one. Only offered to someone already signed in, because a
        passkey is a second way into an account that has to exist first. */
     var add = scope.querySelector("[data-passkey-add]");
+    var addNote = scope.querySelector("[data-passkey-note]");
     if (add) {
-      var addNote = scope.querySelector("[data-passkey-note]");
       if (!window.PublicKeyCredential) {
         add.hidden = true;
       } else {
@@ -333,6 +403,7 @@
                   : "That did not save. Try again.",
                 !result.ok,
               );
+              if (result.ok) drawPasskeys();
             })
             .catch(function (error) {
               // A refusal is the visitor changing their mind, not a fault.
@@ -405,6 +476,7 @@
     }
 
     refresh();
+    drawPasskeys();
   }
 
   function applyForms(content) {
