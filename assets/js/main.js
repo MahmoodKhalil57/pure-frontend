@@ -104,7 +104,6 @@
 
     var status = scope.querySelector("[data-account-status]");
     var who = scope.querySelector("[data-account-name]");
-    var heading = scope.querySelector("[data-account-heading]");
 
     function say(node, message, isError) {
       if (!node) return;
@@ -127,8 +126,8 @@
       else delete document.documentElement.dataset.account;
 
       if (who) who.textContent = name;
-      // The page is not "Sign in" once you are.
-      if (heading) heading.textContent = signedIn ? "Your account" : "Sign in";
+      // The heading is not set here: both are in the markup and CSS shows the
+      // one that matches. Writing it from script is what made it flip.
 
       // Remembered so the next visit paints straight into the right state. A
       // display hint, never a credential: the server is asked every time.
