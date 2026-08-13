@@ -1,8 +1,8 @@
 {
   "announcement": "Lot One opens to the list first. Nothing is held back for later.",
   "backend": {
-    "url": "https://tenantone-aug2026.saastemly.com",
-    "form": "opening-notice"
+    "url": "https://saastarter5.saastemly.com",
+    "form": "early-access"
   },
   "contact": {
     "email": "bench@qalam-ahar.example",
