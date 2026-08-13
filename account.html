@@ -15,9 +15,9 @@
     <!-- ?v= is a cache buster. GitHub Pages serves these with max-age=14400,
          so without it a stylesheet change takes up to four hours to reach
          anyone who has already visited. Bump it when the assets change. -->
-    <link rel="stylesheet" href="assets/css/styles.css?v=5" />
+    <link rel="stylesheet" href="assets/css/styles.css?v=6" />
     <!-- Styles authored in the visual builder land here; styles.css stays hand-written. -->
-    <link rel="stylesheet" href="assets/css/page.css?v=5" />
+    <link rel="stylesheet" href="assets/css/page.css?v=6" />
 
     <!--
       Runs before the body exists, which is the whole point: the page cannot
@@ -35,11 +35,11 @@
       use anyway.
     -->
     <script>
+      window.__account = null;
       try {
-        var hint = localStorage.getItem("qa.account");
-        if (hint) {
+        window.__account = localStorage.getItem("qa.account");
+        if (window.__account) {
           document.documentElement.dataset.account = "in";
-          document.documentElement.dataset.accountName = hint;
         }
       } catch (error) {
         /* private mode, or storage refused — the default stands */
@@ -97,6 +97,24 @@
           <p class="account__who">
             Signed in as <strong data-account-name></strong>.
           </p>
+          <!--
+            Filled here rather than by main.js, because an inline script blocks
+            the parser: it runs while the element above it is being built and
+            before anything is painted. The card and the name therefore arrive
+            in the same frame instead of the name appearing a moment after the
+            card that holds it.
+
+            Real text in the DOM, not a CSS ::after — a greeting has to be
+            selectable, and readable to a screen reader, which generated
+            content is not dependably either.
+          -->
+          <script>
+            if (window.__account) {
+              document.currentScript.parentNode
+                .querySelector("[data-account-name]")
+                .textContent = window.__account;
+            }
+          </script>
           <p class="account__note">
             A new account can reach what it is given and nothing more. Ask the
             bench if you need more than that.
@@ -200,7 +218,7 @@
       </ul>
     </footer>
 
-    <script src="assets/js/render.js?v=5"></script>
-    <script src="assets/js/main.js?v=5"></script>
+    <script src="assets/js/render.js?v=6"></script>
+    <script src="assets/js/main.js?v=6"></script>
   </body>
 </html>
