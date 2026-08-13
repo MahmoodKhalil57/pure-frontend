@@ -913,6 +913,10 @@
       setMeta(doc, "name", "description", decl.description);
       setMeta(doc, "property", "og:description", decl.description);
     }
+    // Who the page is for travels with it. The guard in the head reads these
+    // before the page paints, so it cannot be fetched — it has to be stamped.
+    setMeta(doc, "name", "page-access", decl.access || "public");
+    setMeta(doc, "name", "page-redirect", decl.redirect_to || "");
 
     // Bake current CMS data so the page reads complete without JavaScript.
     window.PureRender.bindAll(doc, state.content, { asset: bakedAsset });
