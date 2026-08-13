@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Your account — Qalam &amp; Ahar</title>
-    <meta name="description" content="Sign in to your account." />
+    <meta name="description" content="Create an account or sign in." />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
@@ -13,109 +13,132 @@
       href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=Instrument+Sans:wght@400..700&amp;display=swap"
     />
     <link rel="stylesheet" href="assets/css/styles.css" />
+    <!-- Styles authored in the visual builder land here; styles.css stays hand-written. -->
     <link rel="stylesheet" href="assets/css/page.css" />
-
-    <!--
-      Hand-written, and deliberately not declared in content/pages.json.
-
-      The visual builder writes one file per declared page and would overwrite
-      this one the moment somebody saved. Leaving it undeclared is what keeps a
-      page with real form handling out of the builder's way — the builder draws
-      pages, and this one has behaviour.
-    -->
-    <style>
-      .account { max-width: 52rem; margin: 0 auto; padding: 4rem 1.25rem 6rem; }
-      .account__pair { display: grid; gap: 1.5rem; }
-      /* An explicit `display` beats the `hidden` attribute, so signing in
-         would otherwise leave the forms sitting under the welcome. */
-      .account__pair[hidden] { display: none; }
-      @media (min-width: 46rem) { .account__pair { grid-template-columns: 1fr 1fr; } }
-      .account__card {
-        padding: 1.5rem;
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 14px;
-      }
-      .account__field { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 0.9rem; }
-      /* `.notify__input` is built for the inline sign-up row, where `flex: 1`
-         makes it share a line. Stacked in a column that same rule makes it
-         grow to fill the height, so the growth is switched off here. */
-      .account__field .notify__input { flex: 0 0 auto; width: 100%; }
-      .account__field label { font-size: 0.8rem; letter-spacing: 0.04em; text-transform: uppercase; opacity: 0.7; }
-      .account__status { margin: 0.75rem 0 0; font-size: 0.85rem; opacity: 0.8; }
-      .account__status[hidden] { display: none; }
-      .account__status[data-state='error'] { color: #ff9d80; }
-      .account__note { font-size: 0.85rem; opacity: 0.7; }
-    </style>
   </head>
 
   <body>
     <a href="#main" class="skip">Skip to content</a>
+    <aside aria-label="Announcement" data-when="site.announcement" class="banner">
+      <p data-text="site.announcement"></p>
+    </aside>
 
     <header class="masthead">
       <a href="./" class="brand">
         <span lang="ar" dir="rtl" class="brand__ar">قلم و آهار</span>
         <span class="brand__latin">Qalam &amp; Ahar</span>
       </a>
+      <nav aria-label="Sections" data-list="pages.pages" class="masthead__nav">
+        <a href="./">Home</a>
+      </nav>
     </header>
 
-    <main id="main" class="account">
-      <header class="section-head">
-        <p class="eyebrow">Your account</p>
-        <h1 class="section-head__title">Sign in</h1>
-      </header>
+    <main id="main">
+      <!--
+        A symbol, the same way the sign-up form is one. The entry in
+        content/symbols says what it carries (binding: account) and main.js
+        reads that; this markup is the drawing, which the builder owns.
+      -->
+      <section data-symbol="account-forms" class="account">
+        <header class="section-head">
+          <p class="eyebrow">Your account</p>
+          <h2 class="section-head__title">Sign in</h2>
+        </header>
 
-      <p class="account__status" id="account-status" hidden></p>
+        <p class="account__status" data-account-status hidden></p>
 
-      <section id="account-welcome" hidden class="account__card" style="margin-bottom:1.5rem">
-        <p>
-          Signed in as <strong id="account-name"></strong>.
-        </p>
-        <p class="account__note">
-          A new account can read what it is given and nothing more. Ask whoever
-          runs this site if you need more than that.
-        </p>
-        <button type="button" class="btn btn--ghost" id="signout">Sign out</button>
+        <div class="account__card" data-account-signed-in hidden>
+          <p>Signed in as <strong data-account-name></strong>.</p>
+          <p class="account__note">
+            A new account can reach what it is given and nothing more.
+          </p>
+          <button type="button" class="btn btn--ghost" data-account-sign-out>
+            Sign out
+          </button>
+        </div>
+
+        <div class="account__pair" data-account-signed-out>
+          <div class="account__card">
+            <p class="account__title">Create an account</p>
+            <form data-account="sign-up" novalidate>
+              <div class="account__field">
+                <label for="account-name">Your name</label>
+                <input
+                  class="notify__input"
+                  id="account-name"
+                  name="name"
+                  autocomplete="name"
+                />
+              </div>
+              <div class="account__field">
+                <label for="account-email">Email</label>
+                <input
+                  class="notify__input"
+                  id="account-email"
+                  name="email"
+                  type="email"
+                  required
+                  autocomplete="email"
+                />
+              </div>
+              <div class="account__field">
+                <label for="account-password">Password</label>
+                <input
+                  class="notify__input"
+                  id="account-password"
+                  name="password"
+                  type="password"
+                  required
+                  minlength="8"
+                  autocomplete="new-password"
+                />
+              </div>
+              <button type="submit" class="btn btn--solid">
+                Create my account
+              </button>
+              <p class="account__status" data-account-note hidden></p>
+            </form>
+          </div>
+
+          <div class="account__card">
+            <p class="account__title">Already have one</p>
+            <form data-account="sign-in" novalidate>
+              <div class="account__field">
+                <label for="signin-email">Email</label>
+                <input
+                  class="notify__input"
+                  id="signin-email"
+                  name="email"
+                  type="email"
+                  required
+                  autocomplete="email"
+                />
+              </div>
+              <div class="account__field">
+                <label for="signin-password">Password</label>
+                <input
+                  class="notify__input"
+                  id="signin-password"
+                  name="password"
+                  type="password"
+                  required
+                  autocomplete="current-password"
+                />
+              </div>
+              <button type="submit" class="btn btn--solid">Sign in</button>
+              <p class="account__status" data-account-note hidden></p>
+            </form>
+          </div>
+        </div>
       </section>
-
-      <div class="account__pair" id="account-forms">
-        <section class="account__card">
-          <h2 class="section-head__title">Create an account</h2>
-          <form id="signup-form" novalidate>
-            <div class="account__field">
-              <label for="signup-name">Your name</label>
-              <input class="notify__input" id="signup-name" name="name" autocomplete="name" />
-            </div>
-            <div class="account__field">
-              <label for="signup-email">Email</label>
-              <input class="notify__input" id="signup-email" name="email" type="email" required autocomplete="email" />
-            </div>
-            <div class="account__field">
-              <label for="signup-password">Password</label>
-              <input class="notify__input" id="signup-password" name="password" type="password" required minlength="8" autocomplete="new-password" />
-            </div>
-            <button type="submit" class="btn btn--solid">Create my account</button>
-            <p class="account__status" id="signup-status" hidden></p>
-          </form>
-        </section>
-
-        <section class="account__card">
-          <h2 class="section-head__title">Already have one</h2>
-          <form id="signin-form" novalidate>
-            <div class="account__field">
-              <label for="signin-email">Email</label>
-              <input class="notify__input" id="signin-email" name="email" type="email" required autocomplete="email" />
-            </div>
-            <div class="account__field">
-              <label for="signin-password">Password</label>
-              <input class="notify__input" id="signin-password" name="password" type="password" required autocomplete="current-password" />
-            </div>
-            <button type="submit" class="btn btn--solid">Sign in</button>
-            <p class="account__status" id="signin-status" hidden></p>
-          </form>
-        </section>
-      </div>
     </main>
 
-    <script src="assets/js/account.js"></script>
+    <footer class="colophon">
+      <p lang="ar" dir="rtl" class="colophon__ar">قلم و آهار</p>
+      <ul data-list="site.contact.links" class="colophon__links"></ul>
+    </footer>
+
+    <script src="assets/js/render.js"></script>
+    <script src="assets/js/main.js"></script>
   </body>
 </html>
