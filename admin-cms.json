@@ -199,12 +199,6 @@
           }
         }
       ]
-    },
-    {
-      "slug": "probe-form",
-      "name": "Probe form (edited)",
-      "status": "draft",
-      "fields": []
     }
   ]
 }
