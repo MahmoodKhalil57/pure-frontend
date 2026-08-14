@@ -34,8 +34,8 @@ display_url: https://mahmoodkhalil57.github.io/pure-frontend/
 
 collections:
   - name: content
-    label: Content
-    icon: description
+    label: Workshop notes
+    icon: local_florist
     files:
       - name: craft
         label: How a pen is cut
