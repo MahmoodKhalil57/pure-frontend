@@ -14,9 +14,9 @@
       href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=Instrument+Sans:wght@400..700&amp;display=swap"
     />
     <!-- ?v= is a cache buster: GitHub Pages serves these with max-age=14400. -->
-    <link rel="stylesheet" href="assets/css/styles.css?v=15" />
+    <link rel="stylesheet" href="assets/css/styles.css?v=16" />
     <!-- Styles authored in the visual builder land here; styles.css stays hand-written. -->
-    <link rel="stylesheet" href="assets/css/page.css?v=15" />
+    <link rel="stylesheet" href="assets/css/page.css?v=16" />
 
     <!--
       Who this page is for, taken from its entry in the Pages collection and
@@ -59,7 +59,13 @@
           (needs === "signed-in" && !signedIn) ||
           (needs === "signed-out" && signedIn);
         var to = meta("page-redirect");
-        if (wrong && to) location.replace(to);
+        /* A caller may name where to land; only a path on this site is taken. */
+        var next = "";
+        try {
+          next = new URLSearchParams(location.search).get("next") || "";
+        } catch (error) {}
+        if (!/^\/[^/\\]/.test(next)) next = "";
+        if (wrong && to) location.replace(next || to);
       })();
     </script>
   </head>
@@ -146,7 +152,7 @@
       </ul>
     </footer>
 
-    <script src="assets/js/render.js?v=15"></script>
-    <script src="assets/js/main.js?v=15"></script>
+    <script src="assets/js/render.js?v=16"></script>
+    <script src="assets/js/main.js?v=16"></script>
   </body>
 </html>

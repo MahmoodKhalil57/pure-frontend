@@ -108,6 +108,24 @@
     return { needs: read("page-access"), to: read("page-redirect") };
   }
 
+  /* Where to go once the sign-in lands.
+
+     A page says where its visitors belong, but a caller may name somewhere
+     else: the dashboard at /dynamic-admin sends people here in a popup and
+     needs them back on the page that finishes the handshake, not on their
+     account. Only a path on this site is honoured — an absolute URL in a query
+     string is somebody else's redirect, and this is exactly the shape that gets
+     used to bounce people off a trusted domain. */
+  function nextTarget() {
+    var raw = "";
+    try {
+      raw = new URLSearchParams(location.search).get("next") || "";
+    } catch (error) {
+      /* no URLSearchParams, or a malformed query — treated as unset */
+    }
+    return /^\/[^/\\]/.test(raw) ? raw : "";
+  }
+
   /* --- passkeys -------------------------------------------------------------
      WebAuthn moves binary in and out of the browser, and the server speaks
      base64url, so the two conversions below are the whole adapter. Written out
@@ -355,7 +373,7 @@
       var wrong =
         (rule.needs === "signed-in" && !signedIn) ||
         (rule.needs === "signed-out" && signedIn);
-      if (wrong && rule.to) location.replace(rule.to);
+      if (wrong && rule.to) location.replace(nextTarget() || rule.to);
     }
 
     // The greeting is already filled, during parse, by the inline script beside

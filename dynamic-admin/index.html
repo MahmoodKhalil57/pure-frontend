@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>Qalam &amp; Ahar — dashboard</title>
+
+    <!--
+      The same CMS as /static-admin, signed in to differently.
+
+      /static-admin talks to GitHub directly and asks for a personal access
+      token, which means everyone who edits the site needs a GitHub account with
+      write access to the repository. That is right for whoever owns the site
+      and wrong for everyone else: it hands out a credential that reaches every
+      branch, every file, and the repository settings.
+
+      This one signs in with the site's own accounts, and every read and write
+      goes through the node, which checks what that account is allowed to touch
+      before it forwards anything. Nobody here has a GitHub account, and nothing
+      in this page has ever seen a repository token.
+
+      It is still Sveltia, unmodified, using its own GitHub backend. Only the
+      address it is pointed at has changed.
+    -->
+    <link
+      rel="cms-config-url"
+      type="application/yaml"
+      href="/api/cms/config.yml"
+    />
+  </head>
+  <body>
+    <!-- Pinned to match /static-admin, so the two dashboards behave the same.
+         Bump both together. -->
+    <script src="https://unpkg.com/@sveltia/cms@0.187.0/dist/sveltia-cms.js"></script>
+    <!-- The same preview renderers the site itself uses. -->
+    <script src="../assets/js/render.js"></script>
+    <script src="../static-admin/preview.js"></script>
+  </body>
+</html>
